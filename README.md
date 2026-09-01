@@ -73,7 +73,7 @@ feat-브랜치명#이슈번호
 feat-question-attempt-mart#1
 
 ### 커밋 컨벤션
-[Feat] 질문 진행 시도 마트 생성
-[Feat] 질문 순서별 스킵률 분석 추가
-[Fix] 중복 완료 이벤트 집계 오류 수정
-[Docs] 프로젝트 README 작성
+- [Feat] 질문 진행 시도 마트 생성
+- [Feat] 질문 순서별 스킵률 분석 추가
+- [Fix] 중복 완료 이벤트 집계 오류 수정
+- [Docs] 프로젝트 README 작성
