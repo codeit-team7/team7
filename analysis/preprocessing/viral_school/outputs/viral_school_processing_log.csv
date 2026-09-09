@@ -1,0 +1,7 @@
+﻿mart,source_path,output_path,source_rows,output_rows,row_preserved,output_columns
+mart_user_acquisition_profile_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_user_acquisition_profile_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_user_acquisition_profile_v2_clean.csv.gz,677085,677085,True,60
+mart_user_contact_record_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_user_contact_record_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_user_contact_record_v2_clean.csv.gz,5063,5063,True,15
+mart_friend_request_event_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_friend_request_event_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_friend_request_event_v2_clean.csv.gz,17147175,17147175,True,26
+mart_friend_request_pair_summary_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_friend_request_pair_summary_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_friend_request_pair_summary_v2_clean.csv.gz,17038234,17038234,True,24
+mart_user_viral_profile_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_user_viral_profile_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_user_viral_profile_v2_clean.csv.gz,677085,677085,True,69
+mart_school_viral_daily_v2,C:\Users\lucy5\Desktop\team7\data\marts\23_marts_csv\mart_school_viral_daily_v2.csv.gz,C:\Users\lucy5\Desktop\team7\data\processed\viral_school\mart_school_viral_daily_v2_clean.csv.gz,2428008,2428008,True,55
