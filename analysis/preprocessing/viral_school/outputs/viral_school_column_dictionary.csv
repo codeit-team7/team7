@@ -1,0 +1,250 @@
+﻿mart,column_name,column_origin,description
+mart_user_acquisition_profile_v2,user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,is_superuser,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,is_staff,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,gender,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_point_snapshot,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_friend_id_list_json,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,is_push_on,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_block_user_id_list_json,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_hide_user_id_list_json,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_ban_status,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_report_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_alarm_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_pending_chat,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_pending_votes,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_group_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_grade,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_class_num,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_school_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_school_address,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_school_student_count_source,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_school_type,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_friend_json_valid,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_friend_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_block_json_valid,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_block_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_hide_json_valid,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_hide_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_school_signup_rank,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_account_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_first_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_40th_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_last_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,current_roster_reached_40_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,seconds_first_to_40th_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,contact_source_row_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,contact_record_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,contacts_observed_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,contacts_count_source,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,invite_user_id_list_json,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,invite_list_json_valid,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,invite_user_id_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_relation_row_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_school_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_distance_min_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_distance_avg_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_distance_max_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_self_relation_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,nearby_zero_distance_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,profile_time_scope,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_acquisition_profile_v2,analysis_eligible_nonstaff_flag,DERIVED,직원과 슈퍼유저가 아닌 계정이면 1. 행은 삭제하지 않음.
+mart_user_acquisition_profile_v2,has_current_school_flag,DERIVED,현재 학교 ID가 관측되면 1.
+mart_user_acquisition_profile_v2,signup_date,DERIVED,가입 시각에서 만든 날짜.
+mart_user_acquisition_profile_v2,signup_year_month,DERIVED,가입 연월 YYYY-MM.
+mart_user_acquisition_profile_v2,is_2023_may_signup_flag,DERIVED,가입 시각이 2023년 5월이면 1.
+mart_user_acquisition_profile_v2,days_signup_from_school_first,DERIVED,현재 roster 기준 학교 첫 가입부터 해당 사용자 가입까지 경과일.
+mart_user_acquisition_profile_v2,days_signup_from_observed_40th,DERIVED,현재 roster 기준 학교 40번째 가입부터 해당 사용자 가입까지 경과일.
+mart_user_acquisition_profile_v2,signup_on_or_after_school_first_flag,DERIVED,사용자 가입이 현재 roster의 첫 가입과 같거나 이후면 1.
+mart_user_acquisition_profile_v2,signup_on_or_after_observed_40th_flag,DERIVED,사용자 가입이 관측된 40번째 가입과 같거나 이후면 1. 40명 미도달 학교는 결측.
+mart_user_acquisition_profile_v2,signup_observed_40_phase,DERIVED,"NO_CURRENT_SCHOOL, SCHOOL_NOT_OBSERVED_REACHED_40, BEFORE_OBSERVED_40TH, ON_OR_AFTER_OBSERVED_40TH 구분."
+mart_user_contact_record_v2,contact_record_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,contacts_count_source,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,invite_user_id_list_json,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,invite_list_json_valid,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,invite_user_id_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,orphan_user_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,contact_time_scope,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_contact_record_v2,invite_user_id_list_length_recalc,DERIVED,JSON 배열을 Python에서 다시 센 길이.
+mart_user_contact_record_v2,invite_length_match_flag,DERIVED,원천 파생 길이와 Python 재계산 길이가 같으면 1.
+mart_user_contact_record_v2,has_inviter_reference_flag,DERIVED,초대자 ID 배열에 원소가 하나 이상 있으면 1.
+mart_user_contact_record_v2,contact_owner_known_user_flag,DERIVED,연락처 소유 user_id가 사용자 기준정보에 있으면 1.
+mart_user_contact_record_v2,analysis_eligible_nonstaff_flag,DERIVED,연락처 소유자가 직원·슈퍼유저가 아닌 계정이면 1.
+mart_user_contact_record_v2,contact_owner_current_school_id,DERIVED,연락처 소유자의 현재 학교 ID. 과거 초대 당시 학교가 아님.
+mart_user_contact_record_v2,contacts_count_nonnegative_flag,DERIVED,연락처 수가 0 이상이면 1.
+mart_friend_request_event_v2,request_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,send_user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,receive_user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,final_status_code,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,request_created_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,request_created_date_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,request_updated_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,request_updated_date_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,created_to_last_update_seconds,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,negative_update_interval_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,self_request_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_event_v2,final_status_label,DERIVED,A/P/R을 FINAL_ACCEPTED/FINAL_PENDING/FINAL_REJECTED로 읽기 쉽게 표시. 최종 상태임.
+mart_friend_request_event_v2,status_code_valid_flag,DERIVED,최종 상태 코드가 A/P/R이면 1.
+mart_friend_request_event_v2,request_created_year_month,DERIVED,요청 생성 연월 YYYY-MM.
+mart_friend_request_event_v2,is_2023_may_request_flag,DERIVED,요청 생성 시각이 2023년 5월이면 1.
+mart_friend_request_event_v2,created_to_last_update_seconds_recalc,DERIVED,수정 시각-생성 시각을 초로 재계산.
+mart_friend_request_event_v2,interval_seconds_match_flag,DERIVED,원천 경과초와 Python 재계산 값이 같으면 1.
+mart_friend_request_event_v2,request_timestamp_valid_flag,DERIVED,생성·수정 시각이 모두 유효하면 1.
+mart_friend_request_event_v2,sender_known_user_flag,DERIVED,발신자가 사용자 기준정보에 있으면 1.
+mart_friend_request_event_v2,receiver_known_user_flag,DERIVED,수신자가 사용자 기준정보에 있으면 1.
+mart_friend_request_event_v2,sender_analysis_eligible_nonstaff_flag,DERIVED,발신자가 비직원·비슈퍼 계정이면 1.
+mart_friend_request_event_v2,receiver_analysis_eligible_nonstaff_flag,DERIVED,수신자가 비직원·비슈퍼 계정이면 1.
+mart_friend_request_event_v2,sender_current_school_id,DERIVED,발신자의 현재 학교 ID. 요청 당시 학교가 아님.
+mart_friend_request_event_v2,receiver_current_school_id,DERIVED,수신자의 현재 학교 ID. 요청 당시 학교가 아님.
+mart_friend_request_event_v2,same_school_current_flag,DERIVED,현재 학교 ID가 둘 다 관측되고 같으면 1. 요청 당시 동일 학교를 뜻하지 않음.
+mart_friend_request_event_v2,analysis_eligible_request_flag,DERIVED,양쪽 사용자 식별·비직원·유효 시각·유효 상태·비자기요청·비음수 구간 조건을 모두 만족하면 1.
+mart_friend_request_pair_summary_v2,send_user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,receive_user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,request_record_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,final_accepted_record_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,final_pending_record_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,final_rejected_record_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,first_request_created_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,last_request_created_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,first_accepted_effective_at_proxy,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,last_accepted_effective_at_proxy,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,first_last_update_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,last_last_update_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_friend_request_pair_summary_v2,status_count_sum,DERIVED,방향쌍의 최종 A/P/R 레코드 수 합.
+mart_friend_request_pair_summary_v2,status_total_match_flag,DERIVED,A/P/R 합이 전체 요청 레코드 수와 같으면 1.
+mart_friend_request_pair_summary_v2,repeated_directional_pair_flag,DERIVED,같은 발신자→수신자 방향으로 2건 이상 요청이 있으면 1.
+mart_friend_request_pair_summary_v2,pair_created_interval_valid_flag,DERIVED,최초 요청시각이 최종 요청시각보다 늦지 않으면 1.
+mart_friend_request_pair_summary_v2,sender_known_user_flag,DERIVED,발신자가 사용자 기준정보에 있으면 1.
+mart_friend_request_pair_summary_v2,receiver_known_user_flag,DERIVED,수신자가 사용자 기준정보에 있으면 1.
+mart_friend_request_pair_summary_v2,sender_analysis_eligible_nonstaff_flag,DERIVED,발신자가 비직원·비슈퍼 계정이면 1.
+mart_friend_request_pair_summary_v2,receiver_analysis_eligible_nonstaff_flag,DERIVED,수신자가 비직원·비슈퍼 계정이면 1.
+mart_friend_request_pair_summary_v2,sender_current_school_id,DERIVED,발신자의 현재 학교 ID.
+mart_friend_request_pair_summary_v2,receiver_current_school_id,DERIVED,수신자의 현재 학교 ID.
+mart_friend_request_pair_summary_v2,same_school_current_flag,DERIVED,현재 학교가 둘 다 관측되고 같으면 1.
+mart_friend_request_pair_summary_v2,analysis_eligible_pair_flag,DERIVED,양쪽 사용자 식별·비직원·비자기쌍·내부 합계·시각 조건을 모두 만족하면 1.
+mart_user_viral_profile_v2,user_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,gender,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,is_staff,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,is_superuser,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_group_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_school_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_school_type,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_grade,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_class_num,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_friend_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,contacts_observed_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,contacts_count_source,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,invite_user_id_list_length,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_roster_first_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,current_roster_40th_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_request_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_unique_partner_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_final_accepted_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_final_pending_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_final_rejected_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_repeated_request_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_request_first_24h_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_request_first_72h_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_request_first_7d_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,first_sent_request_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,last_sent_request_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_request_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_unique_partner_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_final_accepted_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_final_pending_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_final_rejected_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_request_first_24h_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_request_first_72h_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_request_first_7d_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,first_received_request_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,last_received_request_at_raw,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,total_request_endpoint_activity_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,has_any_friend_request_activity_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_eventual_acceptance_rate_including_pending,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,sent_eventual_decision_acceptance_rate,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,received_eventual_acceptance_rate_including_pending,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_user_viral_profile_v2,analysis_eligible_nonstaff_flag,DERIVED,직원과 슈퍼유저가 아닌 계정이면 1.
+mart_user_viral_profile_v2,signup_date,DERIVED,가입 날짜.
+mart_user_viral_profile_v2,signup_year_month,DERIVED,가입 연월 YYYY-MM.
+mart_user_viral_profile_v2,is_2023_may_signup_flag,DERIVED,2023년 5월 가입이면 1.
+mart_user_viral_profile_v2,sent_status_total_match_flag,DERIVED,발신 A+P+R 합이 전체 발신 요청 수와 같으면 1.
+mart_user_viral_profile_v2,received_status_total_match_flag,DERIVED,수신 A+P+R 합이 전체 수신 요청 수와 같으면 1.
+mart_user_viral_profile_v2,endpoint_total_match_flag,DERIVED,발신+수신 요청 수가 전체 endpoint 활동 수와 같으면 1.
+mart_user_viral_profile_v2,sent_acceptance_rate_recalc,DERIVED,최종 수락 발신 건수/전체 발신 건수. 가입 전환율이 아님.
+mart_user_viral_profile_v2,sent_decision_acceptance_rate_recalc,DERIVED,최종 수락/(최종 수락+최종 거절). 대기 건 제외.
+mart_user_viral_profile_v2,received_acceptance_rate_recalc,DERIVED,최종 수락 수신 건수/전체 수신 건수.
+mart_user_viral_profile_v2,sent_acceptance_rate_match_flag,DERIVED,기존 발신 전체분모 비율과 재계산 값이 같으면 1.
+mart_user_viral_profile_v2,sent_decision_rate_match_flag,DERIVED,기존 발신 결정분모 비율과 재계산 값이 같으면 1.
+mart_user_viral_profile_v2,received_acceptance_rate_match_flag,DERIVED,기존 수신 비율과 재계산 값이 같으면 1.
+mart_user_viral_profile_v2,sent_first_24h_share,DERIVED,전체 sent 요청 중 가입 후 첫 24h 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,sent_first_72h_share,DERIVED,전체 sent 요청 중 가입 후 첫 72h 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,sent_first_7d_share,DERIVED,전체 sent 요청 중 가입 후 첫 7d 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,received_first_24h_share,DERIVED,전체 received 요청 중 가입 후 첫 24h 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,received_first_72h_share,DERIVED,전체 received 요청 중 가입 후 첫 72h 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,received_first_7d_share,DERIVED,전체 received 요청 중 가입 후 첫 7d 이내 생성된 요청 비율.
+mart_user_viral_profile_v2,sent_request_count_matches_event_flag,DERIVED,sent request_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,sent_final_accepted_count_matches_event_flag,DERIVED,sent final_accepted_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,sent_final_pending_count_matches_event_flag,DERIVED,sent final_pending_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,sent_final_rejected_count_matches_event_flag,DERIVED,sent final_rejected_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,received_request_count_matches_event_flag,DERIVED,received request_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,received_final_accepted_count_matches_event_flag,DERIVED,received final_accepted_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,received_final_pending_count_matches_event_flag,DERIVED,received final_pending_count가 친구요청 원행 재집계와 같으면 1.
+mart_user_viral_profile_v2,received_final_rejected_count_matches_event_flag,DERIVED,received final_rejected_count가 친구요청 원행 재집계와 같으면 1.
+mart_school_viral_daily_v2,school_id,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,activity_date,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_account_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_nonstaff_account_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_first_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_40th_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_last_signup_at,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,current_roster_reached_40_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,new_account_count_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,new_nonstaff_account_count_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,new_staff_or_superuser_account_count_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_request_created_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_request_user_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_created_final_accepted_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_created_final_pending_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_created_final_rejected_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_within_school_count_current,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_cross_school_count_current,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_unknown_school_relation_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_request_created_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_request_user_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_created_final_accepted_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_created_final_pending_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_created_final_rejected_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_within_school_count_current,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_cross_school_count_current,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_unknown_school_relation_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_request_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_final_accepted_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_final_pending_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_final_rejected_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_request_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_final_accepted_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_final_pending_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_final_rejected_last_updated_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,cumulative_account_count_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,cumulative_nonstaff_account_count_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,cumulative_sent_request_created_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,cumulative_received_request_created_count,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_eventual_acceptance_rate_including_pending,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,sent_eventual_decision_acceptance_rate,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,received_eventual_acceptance_rate_including_pending,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,days_from_first_signup_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,days_from_40th_signup_current_roster,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,before_observed_40th_signup_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,on_or_after_observed_40th_signup_flag,SOURCE_PRESERVED,원본 v2 마트 컬럼. 원래 이름과 의미를 보존함.
+mart_school_viral_daily_v2,is_2023_may_activity_flag,DERIVED,활동 날짜가 2023년 5월이면 1.
+mart_school_viral_daily_v2,school_observed_phase,DERIVED,"학교 첫 가입 전, 관측 40명 전, 관측 40명 이후, 40명 미도달을 구분."
+mart_school_viral_daily_v2,school_has_started_by_day_flag,DERIVED,해당 날짜가 현재 roster 기준 학교 첫 가입일과 같거나 이후면 1.
+mart_school_viral_daily_v2,analysis_eligible_school_day_flag,DERIVED,학교 첫 가입 이후이고 현재 비직원 계정이 1명 이상이면 1.
+mart_school_viral_daily_v2,daily_internal_consistency_flag,DERIVED,신규계정·상태·학교관계 합계 검증을 모두 통과하면 1.
+mart_school_viral_daily_v2,sent_event_reaggregate_count,DERIVED,친구요청 원행에 발신자의 현재 학교를 붙여 학교×일로 재집계한 수.
+mart_school_viral_daily_v2,received_event_reaggregate_count,DERIVED,친구요청 원행에 수신자의 현재 학교를 붙여 학교×일로 재집계한 수.
+mart_school_viral_daily_v2,sent_event_reconcile_flag,DERIVED,학교 일별 발신 요청 수가 원행 재집계와 같으면 1.
+mart_school_viral_daily_v2,received_event_reconcile_flag,DERIVED,학교 일별 수신 요청 수가 원행 재집계와 같으면 1.

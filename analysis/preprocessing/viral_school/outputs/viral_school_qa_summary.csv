@@ -1,0 +1,51 @@
+﻿mart,test_name,actual,expected,status,severity,explanation
+CROSS_MART,acquisition_only_school_id_count,1,0,WARN,HIGH,사용자 현재 학교에는 있으나 학교×일 패널에 없는 학교 수입니다. 행을 삭제하지 않고 공통 학교 분석에서 제외합니다.
+CROSS_MART,school_daily_only_school_id_count,401,0,WARN,HIGH,학교×일 패널에는 있으나 현재 사용자가 없는 학교 수입니다. 학교 기준 테이블의 0명 학교를 보존한 결과입니다.
+CROSS_MART,acquisition_vs_viral_user_key_symmetric_difference,0,0,PASS,CRITICAL,두 사용자 grain 마트의 사용자 모집단이 정확히 같아야 합니다.
+mart_friend_request_event_v2,row_count_preserved,17147175,17147175,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_friend_request_event_v2,valid_status_code_rows,17147175,17147175,PASS,CRITICAL,상태 코드는 A/P/R 중 하나여야 합니다.
+mart_friend_request_pair_summary_v2,final_accepted_record_count_matches_event,12878407,12878407,PASS,CRITICAL,방향쌍 합계와 친구요청 원행 합계를 대사합니다.
+mart_friend_request_pair_summary_v2,final_pending_record_count_matches_event,3938608,3938608,PASS,CRITICAL,방향쌍 합계와 친구요청 원행 합계를 대사합니다.
+mart_friend_request_pair_summary_v2,final_rejected_record_count_matches_event,330160,330160,PASS,CRITICAL,방향쌍 합계와 친구요청 원행 합계를 대사합니다.
+mart_friend_request_pair_summary_v2,request_record_count_matches_event,17147175,17147175,PASS,CRITICAL,방향쌍 합계와 친구요청 원행 합계를 대사합니다.
+mart_friend_request_pair_summary_v2,row_count_preserved,17038234,17038234,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_friend_request_pair_summary_v2,status_count_mismatch_rows,0,0,PASS,CRITICAL,A+P+R 합은 요청 원행 수와 같아야 합니다.
+mart_school_viral_daily_v2,cumulative_account_count_current_roster_mismatch_rows,0,0,PASS,CRITICAL,학교별 날짜 순 누적합을 Python에서 재계산합니다.
+mart_school_viral_daily_v2,cumulative_nonstaff_account_count_current_roster_mismatch_rows,0,0,PASS,CRITICAL,학교별 날짜 순 누적합을 Python에서 재계산합니다.
+mart_school_viral_daily_v2,cumulative_received_request_created_count_mismatch_rows,0,0,PASS,CRITICAL,학교별 날짜 순 누적합을 Python에서 재계산합니다.
+mart_school_viral_daily_v2,cumulative_sent_request_created_count_mismatch_rows,0,0,PASS,CRITICAL,학교별 날짜 순 누적합을 Python에서 재계산합니다.
+mart_school_viral_daily_v2,duplicate_school_day_rows,0,0,PASS,CRITICAL,학교×날짜는 1행이어야 합니다.
+mart_school_viral_daily_v2,internal_mismatch,0,0,PASS,CRITICAL,학교 일별 내부 합계 또는 친구요청 원행 재집계 대사입니다.
+mart_school_viral_daily_v2,received_reconcile_mismatch,0,0,PASS,CRITICAL,학교 일별 내부 합계 또는 친구요청 원행 재집계 대사입니다.
+mart_school_viral_daily_v2,row_count_preserved,2428008,2428008,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_school_viral_daily_v2,sent_reconcile_mismatch,0,0,PASS,CRITICAL,학교 일별 내부 합계 또는 친구요청 원행 재집계 대사입니다.
+mart_user_acquisition_profile_v2,duplicate_user_id_rows,0,0,PASS,CRITICAL,사용자 마트는 user_id 1행이어야 합니다.
+mart_user_acquisition_profile_v2,row_count_preserved,677085,677085,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_user_contact_record_v2,duplicate_contact_record_id_rows,0,0,PASS,CRITICAL,contact_record_id는 원행 기본 키입니다.
+mart_user_contact_record_v2,row_count_preserved,5063,5063,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_user_viral_profile_v2,duplicate_user_id_rows,0,0,PASS,CRITICAL,사용자 프로필은 user_id 1행이어야 합니다.
+mart_user_viral_profile_v2,endpoint_total_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_acceptance_rate_match_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_final_accepted_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_final_pending_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_final_rejected_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_request_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,received_status_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,row_count_preserved,677085,677085,PASS,CRITICAL,전처리 전후 행 수가 같아야 합니다.
+mart_user_viral_profile_v2,sent_acceptance_rate_match_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_decision_rate_match_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_final_accepted_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_final_pending_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_final_rejected_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_request_count_matches_event_flag_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+mart_user_viral_profile_v2,sent_status_mismatch,0,0,PASS,CRITICAL,사용자 집계와 원행 또는 내부 합계·비율을 대사합니다.
+CROSS_MART,contact_known_users_vs_profile_observed,5063,5063,PASS,HIGH,연락처 원행 사용자 수와 사용자 프로필의 연락처 관측 플래그 합을 비교합니다.
+mart_friend_request_event_v2,invalid_created_datetime,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_friend_request_event_v2,invalid_updated_datetime,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_friend_request_pair_summary_v2,deterministic_pair_sample_mismatches,0,0,PASS,HIGH,결정적 해시 0.1% 방향쌍을 원행에서 다시 집계해 비교합니다.
+mart_user_acquisition_profile_v2,invalid_datetime_current_roster_40th_signup_at,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_user_acquisition_profile_v2,invalid_datetime_current_roster_first_signup_at,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_user_acquisition_profile_v2,invalid_datetime_current_roster_last_signup_at,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_user_acquisition_profile_v2,invalid_datetime_signup_at,0,0,PASS,HIGH,값이 있었지만 날짜로 변환되지 않은 행 수입니다.
+mart_user_contact_record_v2,contact_fields_match_user_profile_rows,0,0,PASS,HIGH,연락처 원행과 사용자 프로필의 연락처 파생값 대사입니다.
+mart_user_contact_record_v2,invalid_invite_json_recalculated,0,0,PASS,MEDIUM,JSON 값이 있으나 리스트로 읽히지 않은 행 수입니다.
