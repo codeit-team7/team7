@@ -203,6 +203,15 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# Local mart exports and generated EDA results
+mart_*.csv
+eda_outputs/
+
+# Preserve the v2 mart build evidence logs in GitHub.
+# The general *.log rule above still ignores unrelated local logs.
+!sql/marts/v2_complete_coverage/last_build_v2_*.log
+!sql/marts/v2_complete_coverage/last_rate_precision_repair_v2.log
+
 # Ruff stuff:
 .ruff_cache/
 
