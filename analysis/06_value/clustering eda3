@@ -1,0 +1,33 @@
+# 출석 구간
+att_bins = [-1, 0, 7, 30, 90, np.inf]
+att_labels = ['0일 (미출석)', '1~7일', '8~30일', '31~90일', '91일 이상']
+master['att_bin'] = pd.cut(master['attendance_days'], bins=att_bins, labels=att_labels)
+print("구간화 집계 완료.")
+# ----------------------------------------------------
+# 3. 재집계 결과 종합 시각화 대시보드
+# ----------------------------------------------------
+fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+# 1. 포인트 소진
+sns.countplot(data=master, x='point_bin', ax=axes[0, 0], palette='Blues_r')
+axes[0, 0].set_title("[10개교 5,090명] 포인트 소진 구간 분포", fontsize=12, weight='bold')
+axes[0, 0].set_xlabel("소진 포인트")
+axes[0, 0].set_ylabel("유저 수(명)")
+axes[0, 0].tick_params(axis='x', rotation=25)
+# 2. 결제 횟수
+sns.countplot(data=master, x='pay_bin', ax=axes[0, 1], palette='Reds_r')
+axes[0, 1].set_title("[10개교 5,090명] 유료 결제 횟수 구간 분포", fontsize=12, weight='bold')
+axes[0, 1].set_xlabel("결제 횟수")
+axes[0, 1].set_ylabel("유저 수(명)")
+# 3. 투표 발송
+sns.countplot(data=master, x='send_bin', ax=axes[1, 0], palette='Greens_r')
+axes[1, 0].set_title("[10개교 5,090명] 투표 발송 횟수 구간 분포", fontsize=12, weight='bold')
+axes[1, 0].set_xlabel("발송 횟수")
+axes[1, 0].set_ylabel("유저 수(명)")
+axes[1, 0].tick_params(axis='x', rotation=25)
+# 4. 누적 출석
+sns.countplot(data=master, x='att_bin', ax=axes[1, 1], palette='Purples_r')
+axes[1, 1].set_title("[10개교 5,090명] 누적 출석 일수 구간 분포", fontsize=12, weight='bold')
+axes[1, 1].set_xlabel("출석 일수")
+axes[1, 1].set_ylabel("유저 수(명)")
+plt.tight_layout()
+plt.show()
