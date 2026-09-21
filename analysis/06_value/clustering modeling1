@@ -1,0 +1,32 @@
+4. 클러스터링 피처 엔지니어링 및 데이터 마트 구축
+- 분석 목적: 머신러닝 클러스터링 모델 학습을 위해 10개 핵심 학교 5,090명 대상 18개 피처 통합 데이터 마트를 생성하고 5대 핵심 비율 피처를 설계함.
+"""
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import warnings
+warnings.filterwarnings('ignore')
+try:
+    import koreanize_matplotlib
+except ImportError:
+    pass
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+DATA_DIR = './csv_export' if os.path.exists('./csv_export') else '../csv_export'
+MART_DIR = './데이터 마트' if os.path.exists('./데이터 마트') else '../데이터 마트'
+os.makedirs(MART_DIR, exist_ok=True)
+# ----------------------------------------------------
+# 1. 18개 피처 통합 데이터 마트 구축 파이프라인
+# ----------------------------------------------------
+TOP10_SCHOOLS = [1719.0, 369.0, 5372.0, 4516.0, 5520.0, 4426.0, 271.0, 1478.0, 5491.0, 352.0]
+# 1. Master Users
+df_user = pd.read_csv(os.path.join(DATA_DIR, 'accounts_user.csv'))
+mart = df_user[df_user['school_id'].isin(TOP10_SCHOOLS)][['id', 'school_id', 'gender', 'grade', 'contacts_count']].copy()
+mart.rename(columns={'id': 'user_id'}, inplace=True)
+mart['contacts_count'] = mart['contacts_count'].fillna(0)
+# 2. Questionset
+df_qs = pd.read_csv(os.path.join(DATA_DIR, 'polls_questionset.csv'))
+qs_agg = df_qs.groupby('user_id').size().reset_index(name='votes_given')
+mart = mart.merge(qs_agg, on='user_id', how='left').fillna({'votes_given': 0})
