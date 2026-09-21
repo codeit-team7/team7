@@ -1,0 +1,168 @@
+viral_cycle_time_analysis.py
+단계별 기술 설명서
+1. 데이터 로드 및 매핑 단계
+accounts_user, accounts_group, polls_questionset을 로드하여 학교 ID 매핑 딕셔너리를 구축함.
+40번째 가입자 도달 시점을 학교별 기준일(T40)로 고정함.
+2. 초대 수락 소요 시간 및 4단계 구간 분류 단계
+accounts_friendrequest 테이블에서 status == A(수락 완료)인 건만 필터링함.
+초대 발송 시각(invite_at)부터 수락 완료 시각(accept_at)까지의 시간 차이를 시간 단위(cycle_hours)로 계산함.
+학교별 T40 시점 기준 상대 경과일수(days_rel)를 산출하여 4단계 라이프사이클로 구간을 분할함.
+1단계: days_rel < 0 -> 40명 도달 전 (잠김 구간)
+2단계: 0 <= days_rel <= 4 -> 피크 구간 (D0~D4)
+3단계: 4 < days_rel <= 8 -> 급감 구간 (D4~D8)
+4단계: days_rel > 8 -> 붕괴 이후 (D8+)
+3. 통계 집계 및 비교 분석 단계
+전체 3,897개 학교 및 상위 TOP 10 학교를 대상으로 구간별 수락 건수, 중앙값, 평균 시간, 3시간 이내 수락율, 24시간 이내 수락율을 산출함.
+피크 시기(D0~D4)에 수락 중앙값이 3.3시간으로 단축되었다가 8일 차 이후 16.2시간으로 늘어지는 현상을 도출함.
+
+import os
+import time
+import numpy as np
+import pandas as pd
+
+# 0. 환경 설정 및 데이터 경로 정의
+DATA_DIR = r"c:\Users\user\Desktop\고급프로젝트\csv_export"
+CHUNK_SIZE = 1000000
+t_start = time.time()
+
+# 1. 데이터 로드 및 유저-학급-학교 매핑
+user = pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_user.csv"),
+    usecols=["id", "created_at", "group_id"],
+)
+group = pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_group.csv"),
+    usecols=["id", "school_id"],
+)
+questionset = pd.read_csv(
+    os.path.join(DATA_DIR, "polls_questionset.csv"),
+    usecols=["id", "user_id", "created_at"],
+)
+
+user["created_at"] = pd.to_datetime(user["created_at"])
+questionset["created_at"] = pd.to_datetime(questionset["created_at"])
+
+user_group = user.merge(
+    group, left_on="group_id", right_on="id", how="left"
+).rename(columns={"id_x": "user_id"})
+user_valid = user_group.dropna(subset=["school_id"]).copy()
+user_valid["school_id"] = user_valid["school_id"].astype(int)
+
+user_to_school = user_valid.set_index("user_id")["school_id"].to_dict()
+
+# 2. 학교별 40번째 가입일시(해금일 T40) 추출
+user_sorted = user_valid.sort_values(
+    by=["school_id", "created_at"]
+).reset_index(drop=True)
+user_sorted["rank"] = user_sorted.groupby("school_id").cumcount() + 1
+
+forty_users = user_sorted[user_sorted["rank"] == 40]
+unlock_dict = forty_users.set_index("school_id")["created_at"].to_dict()
+valid_schools = set(unlock_dict.keys())
+
+qs_valid = questionset.merge(
+    user_valid[["user_id", "school_id"]], on="user_id", how="inner"
+)
+top10_ids = qs_valid["school_id"].value_counts().head(10).index.tolist()
+
+# 3. 수락 완료(status == A) 초대장 기준 바이럴 주기 및 4단계 구간 분류
+vct_stage_list = []
+
+for chunk in pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_friendrequest.csv"),
+    usecols=[
+        "send_user_id",
+        "created_at",
+        "updated_at",
+        "status",
+    ],
+    chunksize=CHUNK_SIZE,
+    low_memory=False,
+):
+  chunk["school_id"] = chunk["send_user_id"].map(user_to_school)
+  sub = chunk[
+      (chunk["school_id"].isin(valid_schools)) & (chunk["status"] == "A")
+  ].copy()
+
+  if not sub.empty:
+    sub["invite_at"] = pd.to_datetime(sub["created_at"])
+    sub["accept_at"] = pd.to_datetime(sub["updated_at"])
+    sub["unlock_at"] = sub["school_id"].map(unlock_dict)
+
+    sub["cycle_hours"] = (
+        sub["accept_at"] - sub["invite_at"]
+    ).dt.total_seconds() / 3600.0
+    sub = sub[(sub["cycle_hours"] >= 0) & (sub["cycle_hours"] <= 720)]
+
+    sub["days_rel"] = (
+        sub["invite_at"] - sub["unlock_at"]
+    ).dt.total_seconds() / 86400.0
+
+    conditions = [
+        sub["days_rel"] < 0,
+        (sub["days_rel"] >= 0) & (sub["days_rel"] <= 4),
+        (sub["days_rel"] > 4) & (sub["days_rel"] <= 8),
+        sub["days_rel"] > 8,
+    ]
+    choices = [
+        "1. 40명 도달 전 (잠김 구간)",
+        "2. 피크 구간 (D0~D4)",
+        "3. 급감 구간 (D4~D8)",
+        "4. 붕괴 이후 (D8+)",
+    ]
+    sub["stage"] = np.select(conditions, choices, default="기타")
+    vct_stage_list.append(sub[["school_id", "stage", "cycle_hours"]])
+
+df_vct_stages = pd.concat(vct_stage_list, ignore_index=True)
+
+# 4. 전체 학교(3,897개교) 4단계 라이프사이클 통계 집계
+stage_order = [
+    "1. 40명 도달 전 (잠김 구간)",
+    "2. 피크 구간 (D0~D4)",
+    "3. 급감 구간 (D4~D8)",
+    "4. 붕괴 이후 (D8+)",
+]
+
+all_summary = (
+    df_vct_stages.groupby("stage")["cycle_hours"]
+    .agg(
+        총수락건수="count",
+        수락소요시간_중앙값_h="median",
+        평균소요시간_h="mean",
+        이내3h_수락비율=lambda x: (x <= 3).mean() * 100,
+        이내24h_수락비율=lambda x: (x <= 24).mean() * 100,
+    )
+    .reindex(stage_order)
+)
+
+# 5. 풀 퀘스천 셋 상위 TOP 10 학교 4단계 라이프사이클 통계 집계
+df_top10 = df_vct_stages[df_vct_stages["school_id"].isin(top10_ids)]
+top10_summary = (
+    df_top10.groupby("stage")["cycle_hours"]
+    .agg(
+        총수락건수="count",
+        수락소요시간_중앙값_h="median",
+        평균소요시간_h="mean",
+        이내3h_수락비율=lambda x: (x <= 3).mean() * 100,
+        이내24h_수락비율=lambda x: (x <= 24).mean() * 100,
+    )
+    .reindex(stage_order)
+)
+
+# 6. 분석 결과 출력
+print("=" * 80)
+print(
+    "[분석 1] 전체 40명 도달 학교 (3,897개교) 4단계 바이럴 주기(Viral Cycle Time)"
+    " 분석"
+)
+print("=" * 80)
+print(all_summary.round(2).to_string())
+
+print("\n" + "=" * 80)
+print(
+    "[분석 2] 풀 퀘스천 셋 상위 TOP 10 학교 4단계 바이럴 주기(Viral Cycle Time)"
+    " 분석"
+)
+print("=" * 80)
+print(top10_summary.round(2).to_string())
+print(f"\n총 실행 시간: {time.time() - t_start:.1f}초")
