@@ -1,0 +1,33 @@
+decay_df['retention_rate'] = decay_df['survivors'] / len(df_top10) * 100
+plt.figure(figsize=(10, 4))
+plt.plot(decay_df['days'], decay_df['retention_rate'], marker='o', color='navy')
+plt.title("1~30일 출석 감쇠 곡선 (Decay Curve)", fontsize=13, weight='bold')
+plt.xlabel("누적 출석 일수(일)")
+plt.ylabel("잔존율(%)")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.show()
+# ----------------------------------------------------
+# 3. 투표 발송 vs 수신 불균형(Lorentz Curve & Gini 계수) 분석
+# ----------------------------------------------------
+df_qs = pd.read_csv(os.path.join(DATA_DIR, 'polls_questionset.csv'))
+qs_cnt = df_qs[df_qs['user_id'].isin(df_top10['id'])].groupby('user_id').size().values
+def gini(array):
+    array = np.sort(np.array(array, dtype=np.float64))
+    index = np.arange(1, array.shape[0] + 1)
+    n = array.shape[0]
+    return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
+g_val = gini(qs_cnt)
+print(f"투표 발송량 지니 계수: {g_val:.4f} (극심한 불균형 집중도)")
+# 로렌츠 곡선 시각화
+sorted_qs = np.sort(qs_cnt)
+cum_qs = np.cumsum(sorted_qs) / np.sum(qs_cnt)
+cum_users = np.linspace(0, 1, len(sorted_qs))
+plt.figure(figsize=(7, 6))
+plt.plot(cum_users, cum_qs, label=f'투표 발송 로렌츠 곡선 (Gini = {g_val:.2f})', color='crimson', linewidth=2)
+plt.plot([0, 1], [0, 1], 'k--', label='완전 균등선')
+plt.title("투표 발송 불균형 로렌츠 곡선", fontsize=13, weight='bold')
+plt.xlabel("누적 유저 비율")
+plt.ylabel("누적 투표 발송 비율")
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.show()
