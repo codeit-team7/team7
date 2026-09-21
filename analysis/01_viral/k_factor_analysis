@@ -1,0 +1,297 @@
+"""
+1. k_factor_analysis.py
+단계별 기술 설명서
+1. 데이터 로드 및 학교 매핑 단계
+accounts_user, accounts_group, accounts_school, polls_questionset 테이블을 로드함.
+accounts_user 테이블의 group_id를 accounts_group 테이블의 id와 조인하여 유저별 소속 학교 ID(school_id)를 확보함.
+1,700만 행 대용량 친구 요청 데이터와의 고속 조인을 위해 유저-학교 매핑 딕셔너리를 생성함.
+2. 학교별 누적 40번째 가입 시점(해금 기준점 T40) 산출 단계
+user_valid 데이터를 학교별(school_id) 및 가입일시(created_at) 기준으로 오름차순 정렬함.
+groupby(school_id).cumcount() + 1을 적용하여 학교 내 누적 가입 순번을 매김.
+rank가 40인 시점의 가입일시를 해당 학교의 기능 해금 기준일(T40)로 정의하고 딕셔너리로 추출함.
+학교별 최초 가입일과 최종 가입일을 함께 추출하여 40명 도달 전/후 소요 기간(일수) 계산 준비를 마침.
+3. 초대장 청크 단위 집계 단계
+accounts_friendrequest 테이블을 100만 행 단위 청크로 순회함.
+발신자(send_user_id)의 소속 학교가 40명 이상 도달 학교인 데이터만 필터링함.
+초대 발송 시각이 해당 학교의 T40 이전인지 이후인지 플래그(is_pre)를 설정하여 학교별 총 발송량과 수락 완료 건수(status == A)를 집계함.
+4. K-Factor 및 유입 지표 산출 단계
+학교별로 40명 도달 전 소요 기간(pre_days)과 도달 후 소요 기간(post_days)을 산출함.
+일평균 신규 가입자 수 = 가입 유저 수 / 소요 기간
+학교 일평균 초대 발송량 = 총 발송 초대장 수 / 소요 기간
+유저 1인당 초대 발송 수 (i) = 총 발송 초대장 수 / 가입 유저 수
+초대 수락 전환율 (c) = 수락 완료 건수 / 총 발송 초대장 수
+바이럴 계수 (K) = i * c 산출을 완료함.
+5. TOP 10 학교 투표 피크 및 50% 급감일 분석 단계
+polls_questionset 기준 투표량이 가장 많은 상위 10개 학교를 추출함.
+학교별 일자별 투표수를 집계하고 idxmax를 통해 피크일 및 최대 투표수를 도출함.
+피크일 이후 투표수가 최대치의 50% 이하로 처음 하락한 일자를 탐색하여 소요 일수를 계산함.
+"""
+
+import os
+import time
+import numpy as np
+import pandas as pd
+
+# 0. 환경 설정 및 데이터 경로 정의
+DATA_DIR = r"c:\Users\user\Desktop\고급프로젝트\csv_export"
+CHUNK_SIZE = 1000000
+t_start = time.time()
+
+# 1. 데이터 로드 및 유저-학급-학교 계층 구조 매핑
+user = pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_user.csv"),
+    usecols=["id", "created_at", "group_id"],
+)
+group = pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_group.csv"),
+    usecols=["id", "school_id"],
+)
+school = pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_school.csv"),
+    usecols=["id", "school_type", "student_count"],
+)
+questionset = pd.read_csv(
+    os.path.join(DATA_DIR, "polls_questionset.csv"),
+    usecols=["id", "user_id", "created_at"],
+)
+
+user["created_at"] = pd.to_datetime(user["created_at"])
+questionset["created_at"] = pd.to_datetime(questionset["created_at"])
+
+user_group = user.merge(
+    group, left_on="group_id", right_on="id", how="left"
+).rename(columns={"id_x": "user_id"})
+user_valid = user_group.dropna(subset=["school_id"]).copy()
+user_valid["school_id"] = user_valid["school_id"].astype(int)
+
+user_to_school = user_valid.set_index("user_id")["school_id"].to_dict()
+
+# 2. 학교별 누적 40번째 가입자 도달 시점(해금 기준점 T40) 추출
+user_sorted = user_valid.sort_values(
+    by=["school_id", "created_at"]
+).reset_index(drop=True)
+user_sorted["rank"] = user_sorted.groupby("school_id").cumcount() + 1
+
+forty_users = user_sorted[user_sorted["rank"] == 40]
+unlock_dict = forty_users.set_index("school_id")["created_at"].to_dict()
+valid_schools = set(unlock_dict.keys())
+
+first_signup_dict = (
+    user_sorted.groupby("school_id")["created_at"].min().to_dict()
+)
+last_signup_dict = (
+    user_sorted.groupby("school_id")["created_at"].max().to_dict()
+)
+
+# 3. 초대장 청크 단위 집계 (40명 도달 전/후 분리)
+fr_agg_list = []
+for chunk in pd.read_csv(
+    os.path.join(DATA_DIR, "accounts_friendrequest.csv"),
+    usecols=["send_user_id", "created_at", "status"],
+    chunksize=CHUNK_SIZE,
+    low_memory=False,
+):
+  chunk["school_id"] = chunk["send_user_id"].map(user_to_school)
+  sub = chunk[chunk["school_id"].isin(valid_schools)].copy()
+
+  if not sub.empty:
+    sub["invite_at"] = pd.to_datetime(sub["created_at"])
+    sub["unlock_at"] = sub["school_id"].map(unlock_dict)
+    sub["is_pre"] = sub["invite_at"] < sub["unlock_at"]
+    sub["is_accepted"] = sub["status"] == "A"
+
+    agg = (
+        sub.groupby(["school_id", "is_pre"])
+        .agg(
+            invites=("send_user_id", "count"),
+            accepted=("is_accepted", "sum"),
+        )
+        .reset_index()
+    )
+    fr_agg_list.append(agg)
+
+df_fr_agg = (
+    pd.concat(fr_agg_list, ignore_index=True)
+    .groupby(["school_id", "is_pre"])
+    .sum()
+    .reset_index()
+)
+
+# 4. 학교별 K-Factor (K = i * c) 및 40명 전/후 유입 지표 산출
+user_forty = user_sorted[user_sorted["school_id"].isin(valid_schools)].copy()
+user_forty["unlock_at"] = user_forty["school_id"].map(unlock_dict)
+user_forty["is_pre"] = user_forty["created_at"] < user_forty["unlock_at"]
+
+school_user_cnt = (
+    user_forty.groupby(["school_id", "is_pre"]).size().unstack(fill_value=0)
+)
+school_user_cnt = school_user_cnt.rename(
+    columns={True: "pre_users", False: "post_users"}
+)
+
+fr_pre = df_fr_agg[df_fr_agg["is_pre"] == True].set_index("school_id")
+fr_post = df_fr_agg[df_fr_agg["is_pre"] == False].set_index("school_id")
+
+k_results = []
+for sid in valid_schools:
+  u_date = unlock_dict[sid]
+  f_date = first_signup_dict[sid]
+  l_date = last_signup_dict[sid]
+
+  pre_days = max((u_date - f_date).total_seconds() / 86400.0, 0.1)
+  post_days = max((l_date - u_date).total_seconds() / 86400.0, 0.1)
+
+  pre_u = (
+      school_user_cnt.loc[sid, "pre_users"]
+      if sid in school_user_cnt.index
+      else 39
+  )
+  post_u = (
+      school_user_cnt.loc[sid, "post_users"]
+      if sid in school_user_cnt.index
+      else 0
+  )
+
+  pre_inv = fr_pre.loc[sid, "invites"] if sid in fr_pre.index else 0
+  post_inv = fr_post.loc[sid, "invites"] if sid in fr_post.index else 0
+
+  pre_acc = fr_pre.loc[sid, "accepted"] if sid in fr_pre.index else 0
+  post_acc = fr_post.loc[sid, "accepted"] if sid in fr_post.index else 0
+
+  pre_signup_rate = pre_u / pre_days
+  post_signup_rate = post_u / post_days
+
+  pre_invite_rate = pre_inv / pre_days
+  post_invite_rate = post_inv / post_days
+
+  pre_i = pre_inv / pre_u if pre_u > 0 else 0
+  post_i = post_inv / post_u if post_u > 0 else 0
+
+  pre_c = pre_acc / pre_inv if pre_inv > 0 else 0
+  post_c = post_acc / post_inv if post_inv > 0 else 0
+
+  pre_k = pre_i * pre_c
+  post_k = post_i * post_c
+
+  k_results.append({
+      "school_id": sid,
+      "pre_days": pre_days,
+      "post_days": post_days,
+      "pre_signup_rate": pre_signup_rate,
+      "post_signup_rate": post_signup_rate,
+      "pre_invite_rate": pre_invite_rate,
+      "post_invite_rate": post_invite_rate,
+      "pre_i": pre_i,
+      "post_i": post_i,
+      "pre_c": pre_c,
+      "post_c": post_c,
+      "pre_k": pre_k,
+      "post_k": post_k,
+  })
+
+df_k_all = pd.DataFrame(k_results)
+
+# 5. 질문 세트 기준 상위 TOP 10 학교 투표 피크 및 50% 급감일 분석
+qs_valid = questionset.merge(
+    user_valid[["user_id", "school_id"]], on="user_id", how="inner"
+)
+top10_ids = qs_valid["school_id"].value_counts().head(10).index.tolist()
+school_info = school.set_index("id").to_dict(orient="index")
+top10_lifecycle = []
+
+for rank_idx, sid in enumerate(top10_ids, 1):
+  sch_type = school_info.get(sid, {}).get("school_type", "Unknown")
+  unlock_dt = unlock_dict.get(sid, None)
+
+  sch_qs = qs_valid[qs_valid["school_id"] == sid].copy()
+  sch_qs["activity_date"] = pd.to_datetime(sch_qs["created_at"].dt.date)
+  daily_qs = (
+      sch_qs.groupby("activity_date")
+      .size()
+      .reset_index(name="qs_count")
+      .sort_values("activity_date")
+  )
+
+  unlock_date = pd.to_datetime(unlock_dt.date())
+  peak_row = daily_qs.loc[daily_qs["qs_count"].idxmax()]
+  peak_date = peak_row["activity_date"]
+  peak_count = peak_row["qs_count"]
+  days_to_peak = (peak_date - unlock_date).days
+
+  post_peak = daily_qs[daily_qs["activity_date"] > peak_date].copy()
+  half_drop_rows = post_peak[post_peak["qs_count"] <= peak_count * 0.5]
+
+  if not half_drop_rows.empty:
+    half_drop_date = half_drop_rows.iloc[0]["activity_date"]
+    days_peak_to_half = (half_drop_date - peak_date).days
+    days_unlock_to_half = (half_drop_date - unlock_date).days
+    half_drop_str = half_drop_date.strftime("%Y-%m-%d")
+  else:
+    half_drop_str = "N/A"
+    days_peak_to_half = np.nan
+    days_unlock_to_half = np.nan
+
+  top10_lifecycle.append({
+      "순위": rank_idx,
+      "학교ID": sid,
+      "구분": "고등" if sch_type == "H" else "중등",
+      "40명도달일": unlock_date.strftime("%Y-%m-%d"),
+      "투표피크일": peak_date.strftime("%Y-%m-%d"),
+      "40명_피크도달_일수": days_to_peak,
+      "피크당일투표수": peak_count,
+      "50퍼센트_급감일": half_drop_str,
+      "피크_50퍼센트급감_일수": days_peak_to_half,
+      "40명도달_50퍼센트급감_일수": days_unlock_to_half,
+  })
+
+df_top10_lifecycle = pd.DataFrame(top10_lifecycle)
+
+# 6. 분석 결과 출력
+print("=" * 80)
+print("[분석 1] 전체 40명 도달 학교 (총 3,897개교) K-Factor 및 유입 지표 비교")
+print("=" * 80)
+print(
+    f"40명 도달까지 평균 소요일수: {df_k_all['pre_days'].mean():.1f}일 (중앙값:"
+    f" {df_k_all['pre_days'].median():.1f}일)"
+)
+print(
+    "1. 일평균 신규 가입자 수 : 40명 도달 전"
+    f" {df_k_all['pre_signup_rate'].mean():.2f}명/일 | 40명 도달 후"
+    f" {df_k_all['post_signup_rate'].mean():.2f}명/일"
+)
+print(
+    "2. 학교 일평균 초대 발송량: 40명 도달 전"
+    f" {df_k_all['pre_invite_rate'].mean():.1f}건/일 | 40명 도달 후"
+    f" {df_k_all['post_invite_rate'].mean():.1f}건/일"
+)
+print(
+    "3. 유저 1인당 초대 발송 수 (i): 40명 도달 전"
+    f" {df_k_all['pre_i'].mean():.1f}건/인 | 40명 도달 후"
+    f" {df_k_all['post_i'].mean():.1f}건/인"
+)
+print(
+    "4. 초대 수락 전환율 (c)  : 40명 도달 전"
+    f" {df_k_all['pre_c'].mean()*100:.1f}% | 40명 도달 후"
+    f" {df_k_all['post_c'].mean()*100:.1f}%"
+)
+print(
+    f"5. 산출된 바이럴 계수 (K) : 40명 도달 전 {df_k_all['pre_k'].mean():.2f} | 40명"
+    f" 도달 후 {df_k_all['post_k'].mean():.2f}"
+)
+
+print("\n" + "=" * 80)
+print("[분석 2] 풀 퀘스천 셋 상위 TOP 10 학교 투표 피크 및 50% 급감 분석")
+print("=" * 80)
+print(df_top10_lifecycle.to_string(index=False))
+print(
+    "\n40명 도달 -> 투표 피크 도달 평균 일수:"
+    f" {df_top10_lifecycle['40명_피크도달_일수'].mean():.1f}일"
+)
+print(
+    f"피크 -> 50% 급감 평균 일수: {df_top10_lifecycle['피크_50퍼센트급감_일수'].mean():.1f}일"
+)
+print(
+    "40명 도달 -> 50% 급감 총 소요 일수:"
+    f" {df_top10_lifecycle['40명도달_50퍼센트급감_일수'].mean():.1f}일"
+)
+print(f"\n총 실행 시간: {time.time() - t_start:.1f}초")
