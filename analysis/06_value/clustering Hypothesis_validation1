@@ -1,0 +1,33 @@
+6. 익명 투표 소셜 플랫폼 유저 클러스터링 및 4대 가설 검증 파이프라인 (통계 검정 포함)
+- 4대 가설 검증 및 통계적 유의성(p-value) 분석:
+  1. 가설 1: 카이제곱 독립성 검정 (Chi-Square Test)
+  2. 가설 2: 일원배치 분산분석 (One-way ANOVA)
+  3. 가설 3: 독립표본 t-검정 (Independent Two-sample t-test) 및 오즈비 (Odds Ratio)
+  4. 가설 4: 피어슨 상관분석 (Pearson Correlation) 및 OLS 단순선형회귀분석
+"""
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.mixture import GaussianMixture
+from scipy import stats
+import statsmodels.api as sm
+import os
+import warnings
+warnings.filterwarnings('ignore')
+try:
+    import koreanize_matplotlib
+except ImportError:
+    pass
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+DATA_DIR = './csv_export' if os.path.exists('./csv_export') else '../csv_export'
+# ----------------------------------------------------
+# 1. 원본 데이터 로드 및 상위 10개 파일럿 학교 유효 유저 필터링
+# ----------------------------------------------------
+user_df = pd.read_csv(os.path.join(DATA_DIR, 'accounts_user.csv'))
+group_df = pd.read_csv(os.path.join(DATA_DIR, 'accounts_group.csv'))
+q_rec = pd.read_csv(os.path.join(DATA_DIR, 'accounts_userquestionrecord.csv'))
+f_req = pd.read_csv(os.path.join(DATA_DIR, 'accounts_friendrequest.csv'))
+pay_df = pd.read_csv(os.path.join(DATA_DIR, 'accounts_paymenthistory.csv'))
