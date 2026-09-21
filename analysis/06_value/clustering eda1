@@ -1,0 +1,34 @@
+"""
+# 1. 클러스터링 기초 EDA 및 원본 테이블 7종 탐색
+- 분석 목적: 사용자 세그멘테이션 및 클러스터링 피처 설계를 위해 7개 원본 테이블의 기초 통계량과 분포를 탐색함.
+- 분석 대상: 10개 핵심 학교 코호트(5,090명) 및 전체 원본 로그 데이터.
+- 작성 원칙: 각 테이블별 데이터 구조를 파악하고 클러스터링에 활용 가능한 행동 지표 후보를 도출함.
+"""
+# Colab 및 로컬 환경 공통 라이브러리 로드
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import warnings
+warnings.filterwarnings('ignore')
+try:
+    import koreanize_matplotlib
+except ImportError:
+    pass
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+DATA_DIR = './csv_export' if os.path.exists('./csv_export') else '../csv_export'
+print("데이터 디렉토리 경로:", DATA_DIR)
+# ----------------------------------------------------
+# 1. 유저 마스터 테이블 탐색 (accounts_user)
+# ----------------------------------------------------
+TOP10_SCHOOLS = [1719.0, 369.0, 5372.0, 4516.0, 5520.0, 4426.0, 271.0, 1478.0, 5491.0, 352.0]
+df_user = pd.read_csv(os.path.join(DATA_DIR, 'accounts_user.csv'))
+df_top10 = df_user[df_user['school_id'].isin(TOP10_SCHOOLS)].copy()
+print(f"전체 유저 수: {len(df_user):,}명")
+print(f"10개 핵심 학교 유저 수: {len(df_top10):,}명")
+print("성별 분포:\n", df_top10['gender'].value_counts(dropna=False))
+print("학년 분포:\n", df_top10['grade'].value_counts().sort_index())
+# ----------------------------------------------------
+# 2. 코어 활동량 탐색 (polls_questionset)
