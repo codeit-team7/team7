@@ -1,0 +1,33 @@
+5. GMM (Gaussian Mixture Model) 유저 세그멘테이션 모델링
+- 분석 목적: 10개 핵심 학교 투표 코어 유저(4,849명)를 대상으로 가우시안 혼합 모델(GMM)을 적용하여 다차원 행동 군집을 도출함.
+"""
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import warnings
+warnings.filterwarnings('ignore')
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
+try:
+    import koreanize_matplotlib
+except ImportError:
+    pass
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+MART_PATH = './데이터 마트/mart_clustering_features_top10.csv'
+if not os.path.exists(MART_PATH):
+    MART_PATH = '../데이터 마트/mart_clustering_features_top10.csv'
+# ----------------------------------------------------
+# 1. 코어 코호트 추출 및 5대 핵심 피처 Quantile Transformation
+# ----------------------------------------------------
+df_raw = pd.read_csv(MART_PATH)
+df_core = df_raw[df_raw['votes_given'] > 0].copy().reset_index(drop=True)
+print(f"클러스터링 학습 대상 유저 수: {len(df_core):,}명 (비활동 241명 분리)")
+features = ['active_engagement_rate', 'social_receive_ratio', 'hint_open_ratio', 'payment_count', 'friend_req_ratio']
+X_raw = df_core[features].copy()
+scaler = QuantileTransformer(output_distribution='normal', random_state=42)
+X_scaled = scaler.fit_transform(X_raw)
+print("QuantileTransformation 가우시안 정규분포 변환 완료.")
