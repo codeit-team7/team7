@@ -1,0 +1,145 @@
+"""
+# 3단계-4. 데이터마트 기반 클러스터링 피처 엔지니어링 및 데이터 마트 구축
+- 분석 목적: 21개 정제 데이터 마트를 활용하여 10개 핵심 학교 5,090명 대상 18개 피처 통합 마트를 생성하고 5대 핵심 비율 피처를 도출함.
+- 분석 대상: 10개 핵심 학교 5,090명 및 투표 활동 코어 유저 4,849명.
+- 주요 산출물:
+  1. mart_clustering_features_top10_datamart.csv (18개 통합 피처 마트)
+  2. 4단계_5대_핵심피처_분포_시각화.png
+- 작성 원칙: 인위적 미사여구 및 이모티콘을 배제하고 개조식(~함)으로 간결하게 기술함.
+"""
+
+import os
+import warnings
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+warnings.filterwarnings('ignore')
+
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+
+MART_DIR = r"c:\Users\user\Desktop\고급프로젝트\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)-20260917T001059Z-1-001\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)"
+BASE_MART_DIR = r"c:\Users\user\Desktop\고급프로젝트\데이터 마트"
+OUT_DIR = r"c:\Users\user\Desktop\고급프로젝트\데이터마트_기반_클러스터링_EDA"
+os.makedirs(OUT_DIR, exist_ok=True)
+
+print("=== 4단계. 데이터마트 기반 피처 엔지니어링 및 마트 구축 시작 ===")
+
+# ----------------------------------------------------
+# 1. 18개 피처 통합 데이터 마트 구축 파이프라인
+# ----------------------------------------------------
+df_prev_top10 = pd.read_csv(os.path.join(BASE_MART_DIR, 'mart_clustering_features_top10.csv'))
+core_users = set(df_prev_top10['user_id'].tolist())
+
+# 1. 유저 마스터 (mart_user_acquisition_profile_v2)
+df_user_acq = pd.read_csv(os.path.join(MART_DIR, 'mart_user_acquisition_profile_v2.csv.gz'), 
+                          usecols=['user_id', 'current_school_id', 'gender', 'current_grade', 'contacts_count_source'], low_memory=False)
+df_user_acq['user_id'] = pd.to_numeric(df_user_acq['user_id'], errors='coerce')
+mart = df_user_acq[df_user_acq['user_id'].isin(core_users)].copy()
+mart.rename(columns={'current_school_id': 'school_id', 'current_grade': 'grade', 'contacts_count_source': 'contacts_count'}, inplace=True)
+mart['contacts_count'] = pd.to_numeric(mart['contacts_count'], errors='coerce').fillna(0)
+mart['grade'] = pd.to_numeric(mart['grade'], errors='coerce')
+
+# 2. 투표 발송(voter_user_id) 및 투표 수신(chosen_user_id) (mart_vote_record_v2)
+df_vote = pd.read_csv(os.path.join(MART_DIR, 'mart_vote_record_v2.csv.gz'), 
+                      usecols=['user_question_record_id', 'voter_user_id', 'chosen_user_id', 'ping_has_read_current', 'ping_answer_status_current', 'ping_opened_times_current'], low_memory=False)
+df_vote['voter_user_id'] = pd.to_numeric(df_vote['voter_user_id'], errors='coerce')
+df_vote['chosen_user_id'] = pd.to_numeric(df_vote['chosen_user_id'], errors='coerce')
+# 1) 발송 투표수 (votes_given)
+voter_agg = df_vote.groupby('voter_user_id').size().reset_index(name='votes_given').rename(columns={'voter_user_id': 'user_id'})
+mart = mart.merge(voter_agg, on='user_id', how='left').fillna({'votes_given': 0})
+
+# 2) 수신 투표수 및 Ping 상호작용 (votes_received, ping_read, ping_reply, opened_times)
+df_vote['ping_has_read'] = pd.to_numeric(df_vote['ping_has_read_current'], errors='coerce').fillna(0).astype(int)
+df_vote['ping_reply'] = (df_vote['ping_answer_status_current'] == 'A').astype(int)
+df_vote['opened_times_sum'] = pd.to_numeric(df_vote['ping_opened_times_current'], errors='coerce').fillna(0)
+
+rec_agg = df_vote.groupby('chosen_user_id').agg(
+    votes_received=('user_question_record_id', 'count'),
+    ping_read=('ping_has_read', 'sum'),
+    ping_reply=('ping_reply', 'sum'),
+    opened_times=('opened_times_sum', 'sum')
+).reset_index().rename(columns={'chosen_user_id': 'user_id'})
+
+mart = mart.merge(rec_agg, on='user_id', how='left').fillna({
+    'votes_received': 0, 'ping_read': 0, 'ping_reply': 0, 'opened_times': 0
+})
+
+# 3. 친구 요청 발신 및 수신 (mart_user_viral_profile_v2)
+df_viral = pd.read_csv(os.path.join(MART_DIR, 'mart_user_viral_profile_v2.csv.gz'), 
+                       usecols=['user_id', 'sent_request_count', 'received_request_count'], low_memory=False)
+df_viral['user_id'] = pd.to_numeric(df_viral['user_id'], errors='coerce')
+df_viral.rename(columns={'sent_request_count': 'friend_req_sent', 'received_request_count': 'friend_req_received'}, inplace=True)
+mart = mart.merge(df_viral, on='user_id', how='left').fillna({'friend_req_sent': 0, 'friend_req_received': 0})
+
+# 4. 포인트 소진 (mart_value_event_v2)
+df_val = pd.read_csv(os.path.join(MART_DIR, 'mart_value_event_v2.csv.gz'), 
+                     usecols=['service_user_id', 'event_type', 'point_amount_abs'], low_memory=False)
+df_val['user_id'] = pd.to_numeric(df_val['service_user_id'], errors='coerce')
+df_val['point_amount_abs_num'] = pd.to_numeric(df_val['point_amount_abs'], errors='coerce').fillna(0)
+
+pt_spent = df_val[df_val['event_type'] == 'POINT_SPEND'].groupby('user_id')['point_amount_abs_num'].sum().reset_index(name='point_spent')
+mart = mart.merge(pt_spent, on='user_id', how='left').fillna({'point_spent': 0})
+
+# 5. 유료 결제 (mart_value_event_v2)
+pay_agg = df_val[df_val['event_type'] == 'PAYMENT_SUCCESS'].groupby('user_id').size().reset_index(name='payment_count')
+mart = mart.merge(pay_agg, on='user_id', how='left').fillna({'payment_count': 0})
+mart['is_paying_user'] = (mart['payment_count'] > 0).astype(int)
+
+# 6. 출석 일수 (mart_attendance_record_v2)
+df_att = pd.read_csv(os.path.join(MART_DIR, 'mart_attendance_record_v2.csv.gz'), 
+                     usecols=['user_id', 'attendance_list_length'], low_memory=False)
+df_att['user_id'] = pd.to_numeric(df_att['user_id'], errors='coerce')
+df_att['attendance_days'] = pd.to_numeric(df_att['attendance_list_length'], errors='coerce').fillna(0)
+mart = mart.merge(df_att[['user_id', 'attendance_days']], on='user_id', how='left').fillna({'attendance_days': 0})
+
+# 7. 핵심 5대 비율 피처 산출
+mart['active_engagement_rate'] = (mart['ping_read'] + mart['ping_reply']) / (mart['votes_received'] + 1.0)
+mart['social_receive_ratio'] = mart['votes_received'] / (mart['votes_given'] + 1.0)
+mart['hint_open_ratio'] = mart['opened_times'] / (mart['votes_received'] + 1.0)
+mart['friend_req_ratio'] = mart['friend_req_received'] / (mart['friend_req_sent'] + mart['friend_req_received'] + 1.0)
+
+# CSV 저장
+mart_path = os.path.join(OUT_DIR, 'mart_clustering_features_top10_datamart.csv')
+mart.to_csv(mart_path, index=False, encoding='utf-8-sig')
+print(f"- 데이터 마트 생성 완료: {mart_path} (총 {len(mart):,}명, {len(mart.columns)}개 피처)")
+
+# ----------------------------------------------------
+# 2. 5대 핵심 피처 시각화 및 기초 통계량 (코어 4,849명)
+# ----------------------------------------------------
+core_df = mart[mart['votes_given'] > 0].copy().reset_index(drop=True)
+print(f"- 비활동 유저 분리 후 클러스터링 학습 코어 유저 수: {len(core_df):,}명 (비활동 241명 분리 완료)")
+
+features_5 = ['active_engagement_rate', 'social_receive_ratio', 'hint_open_ratio', 'payment_count', 'friend_req_ratio']
+
+fig, axes = plt.subplots(len(features_5), 2, figsize=(16, 18))
+for i, col in enumerate(features_5):
+    sns.histplot(core_df[col], kde=True, ax=axes[i, 0], color='teal', bins=30)
+    axes[i, 0].set_title(f"[{col}] 히스토그램 및 밀도 분포 - 마트 검증", fontsize=11, weight='bold')
+    axes[i, 0].set_ylabel("유저 수(명)")
+    
+    sns.boxplot(x=core_df[col], ax=axes[i, 1], color='coral')
+    axes[i, 1].set_title(f"[{col}] 박스플롯 - 마트 검증", fontsize=11, weight='bold')
+
+plt.tight_layout()
+feat_img_path = os.path.join(OUT_DIR, '4단계_5대_핵심피처_분포_시각화.png')
+plt.savefig(feat_img_path, dpi=300)
+plt.close()
+print(f"- 5대 핵심 피처 분포 시각화 저장 완료: {feat_img_path}")
+
+print("\n=== 5대 핵심 피처 기초 통계량 (투표 코어 4,849명) ===")
+print(core_df[features_5].describe().round(4).to_string())
+
+# 원본 피처와 1:1 전수 대조
+raw_core = df_prev_top10[df_prev_top10['votes_given'] > 0].copy().reset_index(drop=True)
+print("\n=== 원본 마트 vs 신규 마트 피처 평균 1:1 비교 ===")
+comp_df = pd.DataFrame({
+    '원본 마트 평균': raw_core[features_5].mean(),
+    '신규 마트 평균': core_df[features_5].mean(),
+    '차이(Diff)': (core_df[features_5].mean() - raw_core[features_5].mean()).abs()
+})
+print(comp_df.round(6).to_string())
+
+print("\n=== 4단계 피처 엔지니어링 및 데이터마트 구축 완료 ===")
