@@ -1,0 +1,706 @@
+"""
+# 데이터마트 기반 핵심 유저 행동 및 상호작용 구간 분포 종합 분석
+- 분석 목적: 정제된 23종 데이터마트를 활용하여 1~5번 기본 행동 분포, 6~7번 경제/연락처 활동 및 8번 10개 핵심 학교 5대 핵심 비율·행동 피처의 구간(Tier)별 분포를 시각화하고 집계함.
+- 주요 분석 내용:
+  1. accounts_user : 친구 수 및 보유 포인트 구간 분포 (총 677,085명)
+  2. polls_questionset : 투표 세트 코어 활동 구간 분포 (총 4,972명)
+  3. accounts_attendance : 누적 출석일수 구간 분포 (총 349,637명)
+  4. accounts_friendrequest : 친구 요청 발송/수신 및 인기도 비율 분포 (활동 유저 673,705명)
+  5. [10개 핵심 학교] accounts_userquestionrecord : 투표 지목 상호작용 구간 분포 (모수: 5,090명)
+  6 & 7. [10개 핵심 학교] 경제 활동(포인트/결제) 및 연락처 동기화 구간 분포 (모수: 5,090명)
+  8. [10개 핵심 학교] 5개 핵심 비율·행동 피처 구간별 유저 분포 현황 (총 5,090명)
+"""
+
+import os
+import sys
+import warnings
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+warnings.filterwarnings('ignore')
+
+# ----------------------------------------------------
+# 0. 환경 설정 및 경로 탐색
+# ----------------------------------------------------
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+plt.style.use('default')
+
+POSSIBLE_PATHS = [
+    r"c:\Users\user\Desktop\검증\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)-20260917T001059Z-1-001\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)",
+    r"c:\Users\user\Desktop\고급프로젝트\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)-20260917T001059Z-1-001\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)",
+    "./datamart",
+    "./"
+]
+
+MART_DIR = None
+for p in POSSIBLE_PATHS:
+    if os.path.exists(p) and any(f.endswith('.csv.gz') for f in os.listdir(p)):
+        MART_DIR = p
+        break
+
+if MART_DIR is None:
+    MART_DIR = "./"
+    print(f"경고: 데이터마트 디렉토리를 찾지 못하여 기본 경로('{MART_DIR}')로 설정합니다.")
+else:
+    print(f"데이터마트 로드 경로: {MART_DIR}")
+
+OUT_DIR = r"c:\Users\user\Desktop\검증\결과_그래프"
+os.makedirs(OUT_DIR, exist_ok=True)
+
+
+# ----------------------------------------------------
+# 1. accounts_user : 친구 수 및 보유 포인트 구간 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("1. accounts_user : 친구 수 및 보유 포인트 구간 분포 분석")
+print("="*70)
+
+file_path_u = os.path.join(MART_DIR, 'mart_user_acquisition_profile_v2.csv.gz')
+df_u = pd.read_csv(file_path_u, usecols=['user_id', 'current_friend_list_length', 'current_point_snapshot'], low_memory=False)
+total_u = len(df_u)
+
+f_bins = [-1, 0, 5, 15, 30, 50, 100, np.inf]
+f_labels = ['0명(고립)', '1~5명', '6~15명', '16~30명', '31~50명', '51~100명', '101명+(헤비)']
+df_u['friend_tier'] = pd.cut(df_u['current_friend_list_length'].fillna(0), bins=f_bins, labels=f_labels)
+
+p_bins = [-1, 0, 500, 1500, 3000, 5000, 10000, np.inf]
+p_labels = ['0P', '1~500P', '501~1500P', '1501~3000P', '3001~5000P', '5001~10000P', '10001P+(고래)']
+df_u['point_tier'] = pd.cut(df_u['current_point_snapshot'].fillna(0), bins=p_bins, labels=p_labels)
+
+f_summary = df_u['friend_tier'].value_counts().reindex(f_labels, fill_value=0).reset_index()
+f_summary.columns = ['친구 수 구간', '유저 수(명)']
+f_summary['점유율(%)'] = (f_summary['유저 수(명)'] / total_u * 100).round(1)
+
+p_summary = df_u['point_tier'].value_counts().reindex(p_labels, fill_value=0).reset_index()
+p_summary.columns = ['포인트 구간', '유저 수(명)']
+p_summary['점유율(%)'] = (p_summary['유저 수(명)'] / total_u * 100).round(1)
+
+print(f"- 총 유저 수: {total_u:,}명")
+print("\n[친구 수 구간 분포]")
+print(f_summary.to_string(index=False))
+print("\n[보유 잔여 포인트 구간 분포]")
+print(p_summary.to_string(index=False))
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+fig.suptitle(f'1. accounts_user : 친구 수 및 보유 포인트 구간 분포 (총 {total_u:,}명)', fontsize=13, weight='bold', y=0.98)
+
+blue_palette = ['#1d5987', '#2574a9', '#468cc0', '#6ba4cd', '#9cc2dc', '#c6dbe9', '#e1ecf4']
+bars1 = axes[0].bar(f_labels, f_summary['유저 수(명)'], color=blue_palette, width=0.7)
+axes[0].set_title('보유 친구 수 구간별 유저 분포', fontsize=11, weight='bold', pad=10)
+axes[0].set_xlabel('친구 수 구간', fontsize=10, labelpad=8)
+axes[0].set_ylabel('유저 수 (명)', fontsize=10)
+axes[0].set_ylim(0, max(f_summary['유저 수(명)']) * 1.15)
+axes[0].tick_params(axis='x', rotation=30)
+axes[0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    axes[0].annotate(f'{int(h):,}명\n({h/total_u*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+orange_palette = ['#b84d05', '#c85a17', '#d97724', '#e6954b', '#f0b378', '#f8d2aa', '#fdecd7']
+bars2 = axes[1].bar(p_labels, p_summary['유저 수(명)'], color=orange_palette, width=0.7)
+axes[1].set_title('보유 잔여 포인트 구간별 유저 분포', fontsize=11, weight='bold', pad=10)
+axes[1].set_xlabel('포인트 구간', fontsize=10, labelpad=8)
+axes[1].set_ylabel('유저 수 (명)', fontsize=10)
+axes[1].set_ylim(0, max(p_summary['유저 수(명)']) * 1.15)
+axes[1].tick_params(axis='x', rotation=30)
+axes[1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    axes[1].annotate(f'{int(h):,}명\n({h/total_u*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot1_path = os.path.join(OUT_DIR, '1_accounts_user_분포.png')
+plt.savefig(plot1_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot1_path}")
+
+
+# ----------------------------------------------------
+# 2. polls_questionset : 투표 세트 코어 활동 구간 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("2. polls_questionset : 투표 세트 코어 활동 구간 분포 분석")
+print("="*70)
+
+file_path_qs = os.path.join(MART_DIR, 'mart_question_set_record_v2.csv.gz')
+df_qs_all = pd.read_csv(file_path_qs, usecols=['question_set_id', 'question_set_owner_user_id', 'question_set_status'])
+
+qs_grouped = df_qs_all.groupby('question_set_owner_user_id').agg(
+    started=('question_set_id', 'count'),
+    completed=('question_set_status', lambda s: (s == 'F').sum())
+).reset_index()
+
+total_qs_users = len(qs_grouped)
+qs_grouped['rate'] = qs_grouped['completed'] / qs_grouped['started'] * 100
+
+s_bins = [0, 1, 5, 15, 40, 80, np.inf]
+s_labels = ['1회(찍먹)', '2~5회', '6~15회', '16~40회', '41~80회', '81회+(헤비)']
+qs_grouped['started_tier'] = pd.cut(qs_grouped['started'], bins=s_bins, labels=s_labels)
+
+c_bins = [0, 1, 5, 15, 40, 80, np.inf]
+c_labels = ['1회(찍먹)', '2~5회', '6~15회', '16~40회', '41~80회', '81회+(헤비)']
+qs_grouped['completed_tier'] = pd.cut(qs_grouped['completed'], bins=c_bins, labels=c_labels)
+
+def get_rate_tier(r):
+    if r == 0:
+        return '0%(완주실패)'
+    elif r <= 50:
+        return '1~50%'
+    elif r <= 80:
+        return '51~80%'
+    elif r < 100:
+        return '81~99%'
+    else:
+        return '100%(전부완주)'
+
+r_labels = ['0%(완주실패)', '1~50%', '51~80%', '81~99%', '100%(전부완주)']
+qs_grouped['rate_tier'] = qs_grouped['rate'].map(get_rate_tier)
+
+print(f"- 총 코어 유저 수: {total_qs_users:,}명")
+print("\n[시작 수 구간 (started_tier)]")
+print(qs_grouped['started_tier'].value_counts().reindex(s_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[완주 수 구간 (completed_tier)]")
+print(qs_grouped['completed_tier'].value_counts().reindex(c_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[완주율 구간 (rate_tier)]")
+print(qs_grouped['rate_tier'].value_counts().reindex(r_labels, fill_value=0).to_frame('인원(명)'))
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+fig.suptitle(f'2. polls_questionset : 투표 세트 코어 활동 구간 분포 (총 {total_qs_users:,}명)', fontsize=13, weight='bold', y=0.98)
+
+palette_green = ['#1b6837', '#2e8540', '#63ad70', '#9ed2a1', '#c7e9c0', '#e5f5e0']
+palette_teal = ['#529688', '#407a75', '#356360', '#254e56', '#2b5768', '#264253']
+palette_rate = ['#482677', '#2e6f8e', '#238a8d', '#35b779', '#90d743']
+
+# Subplot 1
+s_counts = qs_grouped['started_tier'].value_counts().reindex(s_labels, fill_value=0)
+bars1 = axes[0].bar(s_labels, s_counts, color=palette_green, width=0.7)
+axes[0].set_title('투표 세트 시작 수 구간', fontsize=11, weight='bold', pad=10)
+axes[0].set_xlabel('started_tier', fontsize=10, labelpad=8)
+axes[0].set_ylim(0, max(s_counts) * 1.15)
+axes[0].tick_params(axis='x', rotation=30)
+axes[0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    axes[0].annotate(f'{int(h):,}명\n({h/total_qs_users*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# Subplot 2
+c_counts = qs_grouped['completed_tier'].value_counts().reindex(c_labels, fill_value=0)
+bars2 = axes[1].bar(c_labels, c_counts, color=palette_teal, width=0.7)
+axes[1].set_title('투표 세트 완주 수 구간', fontsize=11, weight='bold', pad=10)
+axes[1].set_xlabel('completed_tier', fontsize=10, labelpad=8)
+axes[1].set_ylim(0, max(c_counts) * 1.15)
+axes[1].tick_params(axis='x', rotation=30)
+axes[1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    axes[1].annotate(f'{int(h):,}명\n({h/total_qs_users*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# Subplot 3
+r_counts = qs_grouped['rate_tier'].value_counts().reindex(r_labels, fill_value=0)
+bars3 = axes[2].bar(r_labels, r_counts, color=palette_rate, width=0.7)
+axes[2].set_title('투표 세트 완주율 구간', fontsize=11, weight='bold', pad=10)
+axes[2].set_xlabel('rate_tier', fontsize=10, labelpad=8)
+axes[2].set_ylim(0, max(r_counts) * 1.15)
+axes[2].tick_params(axis='x', rotation=30)
+axes[2].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars3:
+    h = b.get_height()
+    axes[2].annotate(f'{int(h):,}명\n({h/total_qs_users*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot2_path = os.path.join(OUT_DIR, '2_polls_questionset_분포.png')
+plt.savefig(plot2_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot2_path}")
+
+
+# ----------------------------------------------------
+# 3. accounts_attendance : 누적 출석일수 구간 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("3. accounts_attendance : 누적 출석일수 구간 분포 분석")
+print("="*70)
+
+file_path_att = os.path.join(MART_DIR, 'mart_attendance_record_v2.csv.gz')
+df_att = pd.read_csv(file_path_att, usecols=['user_id', 'attendance_list_length'])
+total_att_users = len(df_att)
+
+att_bins = [-1, 0, 1, 3, 7, 15, 30, np.inf]
+att_labels = ['0일', '1일(당일이탈)', '2~3일', '4~7일(1주)', '8~15일', '16~30일(1달)', '31일+(초장기)']
+df_att['att_tier'] = pd.cut(df_att['attendance_list_length'].fillna(0), bins=att_bins, labels=att_labels)
+
+att_summary = df_att['att_tier'].value_counts().reindex(att_labels, fill_value=0).reset_index()
+att_summary.columns = ['출석일수 구간', '유저 수(명)']
+att_summary['점유율(%)'] = (att_summary['유저 수(명)'] / total_att_users * 100).round(1)
+
+print(f"- 총 유저 수: {total_att_users:,}명")
+print("\n[출석일수 구간 분포]")
+print(att_summary.to_string(index=False))
+
+fig, ax = plt.subplots(figsize=(12, 6))
+fig.suptitle(f'3. accounts_attendance : 누적 출석일수 구간 분포 (총 {total_att_users:,}명)', fontsize=13, weight='bold', y=0.98)
+
+att_palette = ['#28193d', '#3d4d7a', '#3f708d', '#389598', '#4bb59b', '#96d3b4', '#bde2cd']
+bars_att = ax.bar(att_labels, att_summary['유저 수(명)'], color=att_palette, width=0.7)
+ax.set_title('출석일수 구간별 유저 수 및 점유율', fontsize=11, weight='bold', pad=10)
+ax.set_xlabel('출석일수 구간', fontsize=10, labelpad=8)
+ax.set_ylabel('유저 수 (명)', fontsize=10)
+ax.set_ylim(0, max(att_summary['유저 수(명)']) * 1.15)
+ax.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars_att:
+    h = b.get_height()
+    ax.annotate(f'{int(h):,}명 ({h/total_att_users*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                ha='center', va='bottom', fontsize=8, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot3_path = os.path.join(OUT_DIR, '3_accounts_attendance_분포.png')
+plt.savefig(plot3_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot3_path}")
+
+
+# ----------------------------------------------------
+# 4. accounts_friendrequest : 친구 요청 발송/수신 및 인기도 비율 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("4. accounts_friendrequest : 친구 요청 발송/수신 및 인기도 비율 분포 분석")
+print("="*70)
+
+file_path_fr = os.path.join(MART_DIR, 'mart_user_viral_profile_v2.csv.gz')
+df_fr = pd.read_csv(file_path_fr, usecols=['user_id', 'sent_request_count', 'received_request_count'])
+
+sent = df_fr['sent_request_count'].fillna(0)
+recv = df_fr['received_request_count'].fillna(0)
+tot = sent + recv
+
+df_act = df_fr[tot > 0].copy()
+total_act_fr = len(df_act)
+
+sent_bins = [-1, 0, 2, 5, 15, 30, np.inf]
+sent_labels = ['0회', '1~2회', '3~5회', '6~15회', '16~30회', '31회+']
+df_act['sent_tier'] = pd.cut(df_act['sent_request_count'].fillna(0), bins=sent_bins, labels=sent_labels)
+
+recv_bins = [-1, 0, 2, 5, 15, 30, np.inf]
+recv_labels = ['0회', '1~2회', '3~5회', '6~15회', '16~30회', '31회+']
+df_act['recv_tier'] = pd.cut(df_act['received_request_count'].fillna(0), bins=recv_bins, labels=recv_labels)
+
+df_act['popularity_ratio'] = df_act['received_request_count'].fillna(0) / (df_act['sent_request_count'].fillna(0) + df_act['received_request_count'].fillna(0) + 1)
+ratio_bins = [-0.0001, 0.2, 0.4, 0.6, 0.8, 1.0001]
+ratio_labels = ['0~0.2(탐색형)', '0.2~0.4', '0.4~0.6(균형형)', '0.6~0.8', '0.8~1.0(인기형)']
+df_act['ratio_tier'] = pd.cut(df_act['popularity_ratio'], bins=ratio_bins, labels=ratio_labels, right=True)
+
+print(f"- 총 친구 요청 활동 유저 수: {total_act_fr:,}명")
+print("\n[친구 요청 발송 수 구간 (sent_tier)]")
+print(df_act['sent_tier'].value_counts().reindex(sent_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[친구 요청 수신 수 구간 (recv_tier)]")
+print(df_act['recv_tier'].value_counts().reindex(recv_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[인기도 비율 구간 (ratio_tier)]")
+print(df_act['ratio_tier'].value_counts().reindex(ratio_labels, fill_value=0).to_frame('인원(명)'))
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+fig.suptitle('4. accounts_friendrequest : 친구 요청 발송/수신 및 인기도 비율 분포', fontsize=13, weight='bold', y=0.98)
+
+palette_blue = ['#1a4b75', '#246da3', '#4990c2', '#86b7db', '#b9d6ea', '#dceaf3']
+palette_orange = ['#8c2d04', '#c94d12', '#e67329', '#f39e58', '#f8c495', '#fde2cb']
+palette_purple = ['#4a2b66', '#6b4c8a', '#9173b0', '#bca3d4', '#e2d7ed']
+
+# Subplot 1
+s_counts = df_act['sent_tier'].value_counts().reindex(sent_labels, fill_value=0)
+bars1 = axes[0].bar(sent_labels, s_counts, color=palette_blue, width=0.7)
+axes[0].set_title('친구 요청 발송 수 구간', fontsize=11, weight='bold', pad=10)
+axes[0].set_xlabel('sent_tier', fontsize=10, labelpad=8)
+axes[0].set_ylim(0, max(s_counts) * 1.15)
+axes[0].tick_params(axis='x', rotation=30)
+axes[0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    axes[0].annotate(f'{int(h):,}명\n({h/total_act_fr*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# Subplot 2
+r_counts = df_act['recv_tier'].value_counts().reindex(recv_labels, fill_value=0)
+bars2 = axes[1].bar(recv_labels, r_counts, color=palette_orange, width=0.7)
+axes[1].set_title('친구 요청 수신 수 구간', fontsize=11, weight='bold', pad=10)
+axes[1].set_xlabel('recv_tier', fontsize=10, labelpad=8)
+axes[1].set_ylim(0, max(r_counts) * 1.15)
+axes[1].tick_params(axis='x', rotation=30)
+axes[1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    axes[1].annotate(f'{int(h):,}명\n({h/total_act_fr*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# Subplot 3
+rt_counts = df_act['ratio_tier'].value_counts().reindex(ratio_labels, fill_value=0)
+bars3 = axes[2].bar(ratio_labels, rt_counts, color=palette_purple, width=0.7)
+axes[2].set_title('인기도 비율 (수신/전체) 구간', fontsize=11, weight='bold', pad=10)
+axes[2].set_xlabel('ratio_tier', fontsize=10, labelpad=8)
+axes[2].set_ylim(0, max(rt_counts) * 1.15)
+axes[2].tick_params(axis='x', rotation=30)
+axes[2].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars3:
+    h = b.get_height()
+    axes[2].annotate(f'{int(h):,}명\n({h/total_act_fr*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot4_path = os.path.join(OUT_DIR, '4_accounts_friendrequest_분포.png')
+plt.savefig(plot4_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot4_path}")
+
+
+# ----------------------------------------------------
+# 5. [10개 핵심 학교] accounts_userquestionrecord : 투표 지목 상호작용 구간 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("5. [10개 핵심 학교] accounts_userquestionrecord : 투표 지목 상호작용 구간 분포 분석")
+print("="*70)
+
+file_path_u = os.path.join(MART_DIR, 'mart_user_acquisition_profile_v2.csv.gz')
+df_u = pd.read_csv(file_path_u, usecols=['user_id', 'current_school_id', 'contacts_count_source'], low_memory=False)
+top10_schools = df_u['current_school_id'].value_counts().head(10).index.tolist()
+cohort = set(df_u[df_u['current_school_id'].isin(top10_schools)]['user_id'].tolist())
+total_cohort = len(cohort)
+
+file_path_vote = os.path.join(MART_DIR, 'mart_vote_record_v2.csv.gz')
+df_vote = pd.read_csv(file_path_vote, low_memory=False)
+
+given_s = df_vote[df_vote['voter_user_id'].isin(cohort)].groupby('voter_user_id').size()
+recv_s = df_vote[df_vote['chosen_user_id'].isin(cohort)].groupby('chosen_user_id').size()
+open_s = df_vote[df_vote['chosen_user_id'].isin(cohort) & (df_vote['ping_opened_times_current'] > 0)].groupby('chosen_user_id').size()
+
+df_c = pd.DataFrame({'user_id': list(cohort)})
+df_c['given'] = df_c['user_id'].map(given_s).fillna(0)
+df_c['recv'] = df_c['user_id'].map(recv_s).fillna(0)
+df_c['open'] = df_c['user_id'].map(open_s).fillna(0)
+df_c['s_ratio'] = df_c['recv'] / (df_c['given'] + 1)
+
+g_bins = [-1, 0, 10, 50, 150, 300, 600, np.inf]
+g_labels = ['0회(미발송)', '1~10회', '11~50회', '51~150회', '151~300회', '301~600회', '601회+(헤비)']
+df_c['given_tier'] = pd.cut(df_c['given'], bins=g_bins, labels=g_labels)
+
+rec_bins = [-1, 0, 5, 20, 50, 100, 300, np.inf]
+rec_labels = ['0회(소외)', '1~5회', '6~20회', '21~50회', '51~100회', '101~300회', '301회+(인싸)']
+df_c['recv_tier'] = pd.cut(df_c['recv'], bins=rec_bins, labels=rec_labels)
+
+sr_bins = [-np.inf, 0.001, 0.5, 1.0, 2.0, 5.0, np.inf]
+sr_labels = ['0.0(결손)', '0.01~0.5', '0.5~1.0', '1.0~2.0', '2.0~5.0', '5.0+(독점)']
+df_c['s_ratio_tier'] = pd.cut(df_c['s_ratio'], bins=sr_bins, labels=sr_labels)
+
+op_bins = [-1, 0, 2, 5, 15, np.inf]
+op_labels = ['0회(미열람)', '1~2회', '3~5회', '6~15회', '16회+']
+df_c['open_tier'] = pd.cut(df_c['open'], bins=op_bins, labels=op_labels)
+
+print(f"- 10개 핵심 학교 코호트 모수: {total_cohort:,}명")
+print("\n[지목 발송량 구간 (given_tier)]")
+print(df_c['given_tier'].value_counts().reindex(g_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[지목 수신량 구간 (recv_tier)]")
+print(df_c['recv_tier'].value_counts().reindex(rec_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[소셜 피드백 수혜율 구간 (s_ratio_tier)]")
+print(df_c['s_ratio_tier'].value_counts().reindex(sr_labels, fill_value=0).to_frame('인원(명)'))
+print("\n[지목 카드 열람 횟수 구간 (open_tier)]")
+print(df_c['open_tier'].value_counts().reindex(op_labels, fill_value=0).to_frame('인원(명)'))
+
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+fig.suptitle(f'5. [10개 핵심 학교] accounts_userquestionrecord : 투표 지목 상호작용 구간 분포 (모수: {total_cohort:,}명)', fontsize=13, weight='bold', y=0.98)
+
+palette_g = ['#1d5987', '#2574a9', '#468cc0', '#6ba4cd', '#9cc2dc', '#c6dbe9', '#e1ecf4']
+palette_rc = ['#381c5a', '#54307a', '#734e9e', '#9472bf', '#b69cdf', '#d4c7ee', '#ede8f7']
+palette_sr = ['#c8e6c9', '#a5d6a7', '#66bb6a', '#42a5f5', '#1e88e5', '#1565c0']
+palette_op = ['#8b1515', '#b33939', '#d7634d', '#f19066', '#fcd2b4']
+
+# 1. Given
+g_counts = df_c['given_tier'].value_counts().reindex(g_labels, fill_value=0)
+bars1 = axes[0, 0].bar(g_labels, g_counts, color=palette_g, width=0.7)
+axes[0, 0].set_title('지목 발송량 구간', fontsize=11, weight='bold', pad=10)
+axes[0, 0].set_xlabel('given_tier', fontsize=10, labelpad=8)
+axes[0, 0].set_ylabel('인원수 (명)', fontsize=10)
+axes[0, 0].set_ylim(0, max(g_counts) * 1.15)
+axes[0, 0].tick_params(axis='x', rotation=30)
+axes[0, 0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    axes[0, 0].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                        ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# 2. Recv
+rc_counts = df_c['recv_tier'].value_counts().reindex(rec_labels, fill_value=0)
+bars2 = axes[0, 1].bar(rec_labels, rc_counts, color=palette_rc, width=0.7)
+axes[0, 1].set_title('지목 수신량 구간', fontsize=11, weight='bold', pad=10)
+axes[0, 1].set_xlabel('recv_tier', fontsize=10, labelpad=8)
+axes[0, 1].set_ylabel('인원수 (명)', fontsize=10)
+axes[0, 1].set_ylim(0, max(rc_counts) * 1.15)
+axes[0, 1].tick_params(axis='x', rotation=30)
+axes[0, 1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    axes[0, 1].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                        ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# 3. Ratio
+sr_counts = df_c['s_ratio_tier'].value_counts().reindex(sr_labels, fill_value=0)
+bars3 = axes[1, 0].bar(sr_labels, sr_counts, color=palette_sr, width=0.7)
+axes[1, 0].set_title('소셜 피드백 수혜율 (수신/발송) 구간', fontsize=11, weight='bold', pad=10)
+axes[1, 0].set_xlabel('s_ratio_tier', fontsize=10, labelpad=8)
+axes[1, 0].set_ylabel('인원수 (명)', fontsize=10)
+axes[1, 0].set_ylim(0, max(sr_counts) * 1.15)
+axes[1, 0].tick_params(axis='x', rotation=30)
+axes[1, 0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars3:
+    h = b.get_height()
+    axes[1, 0].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                        ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# 4. Open
+op_counts = df_c['open_tier'].value_counts().reindex(op_labels, fill_value=0)
+bars4 = axes[1, 1].bar(op_labels, op_counts, color=palette_op, width=0.7)
+axes[1, 1].set_title('지목 카드 열람(Open) 횟수 구간', fontsize=11, weight='bold', pad=10)
+axes[1, 1].set_xlabel('open_tier', fontsize=10, labelpad=8)
+axes[1, 1].set_ylabel('인원수 (명)', fontsize=10)
+axes[1, 1].set_ylim(0, max(op_counts) * 1.15)
+axes[1, 1].tick_params(axis='x', rotation=30)
+axes[1, 1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars4:
+    h = b.get_height()
+    axes[1, 1].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                        ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot5_path = os.path.join(OUT_DIR, '5_accounts_userquestionrecord_분포.png')
+plt.savefig(plot5_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot5_path}")
+
+
+# ----------------------------------------------------
+# 6 & 7. [10개 핵심 학교] 경제 활동 및 연락처 동기화 구간 분포
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("6 & 7. [10개 핵심 학교] 경제 활동(포인트/결제) 및 연락처 동기화 구간 분포")
+print("="*70)
+
+df_pay_mart = pd.read_csv(os.path.join(MART_DIR, 'mart_point_payment_event.csv.gz'), low_memory=False)
+df_pay_c = df_pay_mart[df_pay_mart['user_id'].isin(cohort)]
+
+spent_s = df_pay_c[df_pay_c['event_type'] == 'POINT_SPEND'].groupby('user_id')['point_amount_abs'].sum()
+pay_s = df_pay_c[df_pay_c['event_type'] == 'PAYMENT_SUCCESS'].groupby('user_id').size()
+
+df_c['spent'] = df_c['user_id'].map(spent_s).fillna(0)
+df_c['pay_count'] = df_c['user_id'].map(pay_s).fillna(0)
+
+contacts_map = df_u[df_u['user_id'].isin(cohort)].set_index('user_id')['contacts_count_source']
+df_c['contacts'] = pd.to_numeric(df_c['user_id'].map(contacts_map), errors='coerce').fillna(0)
+
+s_bins = [-1, 0, 500, 2000, 5000, 15000, np.inf]
+s_labels = ['0P(미소비)', '1~500P', '501~2000P', '2001~5000P', '5001~15000P', '15001P+(헤비)']
+df_c['spent_tier'] = pd.cut(df_c['spent'], bins=s_bins, labels=s_labels)
+
+p_bins67 = [-1, 0, 1, 3, 10, np.inf]
+p_labels67 = ['0회(무과금)', '1회(첫결제)', '2~3회', '4~10회', '11회+(고래)']
+df_c['pay_tier_67'] = pd.cut(df_c['pay_count'], bins=p_bins67, labels=p_labels67)
+
+c_bins = [-1, 0, 50, 150, 300, 500, np.inf]
+c_labels = ['0개(미연동)', '1~50개', '51~150개', '151~300개', '301~500개', '501개+(광범위)']
+df_c['contact_tier'] = pd.cut(df_c['contacts'], bins=c_bins, labels=c_labels)
+
+fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+fig.suptitle('6 & 7. [10개 핵심 학교] 경제 활동(포인트/결제) 및 연락처 동기화 구간 분포 (모수: 5,090명)', fontsize=13, weight='bold', y=0.98)
+
+palette_sp = ['#3b1c14', '#5c3317', '#9e5d2b', '#c29b72', '#deb887', '#f4a460']
+palette_pay = ['#28193d', '#6a2c70', '#b83b5e', '#f08a5d', '#ee5253']
+palette_ct = ['#234d3b', '#2e6b52', '#41926d', '#67b992', '#97d6b8', '#c8eedb']
+
+# 1. 포인트 총 소비량
+sp_counts = df_c['spent_tier'].value_counts().reindex(s_labels, fill_value=0)
+bars1 = axes[0].bar(s_labels, sp_counts, color=palette_sp, width=0.7)
+axes[0].set_title('포인트 총 소비량 구간', fontsize=11, weight='bold', pad=10)
+axes[0].set_xlabel('spent_tier', fontsize=10, labelpad=8)
+axes[0].set_ylabel('인원수 (명)', fontsize=10)
+axes[0].set_ylim(0, max(sp_counts) * 1.15)
+axes[0].tick_params(axis='x', rotation=35)
+axes[0].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    axes[0].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# 2. 유료 결제 횟수
+py_counts = df_c['pay_tier_67'].value_counts().reindex(p_labels67, fill_value=0)
+bars2 = axes[1].bar(p_labels67, py_counts, color=palette_pay, width=0.7)
+axes[1].set_title('유료 결제 횟수 구간', fontsize=11, weight='bold', pad=10)
+axes[1].set_xlabel('pay_tier', fontsize=10, labelpad=8)
+axes[1].set_ylabel('인원수 (명)', fontsize=10)
+axes[1].set_ylim(0, max(py_counts) * 1.15)
+axes[1].tick_params(axis='x', rotation=30)
+axes[1].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    axes[1].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+# 3. 동기화 연락처 수
+ct_counts = df_c['contact_tier'].value_counts().reindex(c_labels, fill_value=0)
+bars3 = axes[2].bar(c_labels, ct_counts, color=palette_ct, width=0.7)
+axes[2].set_title('동기화 연락처 수 구간', fontsize=11, weight='bold', pad=10)
+axes[2].set_xlabel('contact_tier', fontsize=10, labelpad=8)
+axes[2].set_ylabel('인원수 (명)', fontsize=10)
+axes[2].set_ylim(0, max(ct_counts) * 1.15)
+axes[2].tick_params(axis='x', rotation=35)
+axes[2].grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars3:
+    h = b.get_height()
+    axes[2].annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                     ha='center', va='bottom', fontsize=7.5, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot67_path = os.path.join(OUT_DIR, '6_7_경제활동_및_연락처동기화_분포.png')
+plt.savefig(plot67_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot67_path}")
+
+
+# ----------------------------------------------------
+# 8. [10개 핵심 학교] 5개 핵심 비율·행동 피처 구간별 유저 분포 현황
+# ----------------------------------------------------
+print("\n" + "="*70)
+print("8. [10개 핵심 학교] 5개 핵심 비율·행동 피처 구간별 유저 분포 현황")
+print("="*70)
+
+df_v_recv = df_vote[df_vote['chosen_user_id'].isin(cohort)]
+ping_read_s = df_v_recv[df_v_recv['ping_has_read_current'] == 1].groupby('chosen_user_id').size()
+ping_reply_s = df_v_recv[df_v_recv['ping_answer_status_current'] == 'A'].groupby('chosen_user_id').size()
+opened_times_s = df_v_recv[df_v_recv['ping_opened_times_current'] > 0].groupby('chosen_user_id').size()
+
+df_c['ping_read'] = df_c['user_id'].map(ping_read_s).fillna(0)
+df_c['ping_reply'] = df_c['user_id'].map(ping_reply_s).fillna(0)
+df_c['opened_times'] = df_c['user_id'].map(opened_times_s).fillna(0)
+
+df_fr = pd.read_csv(os.path.join(MART_DIR, 'mart_user_viral_profile_v2.csv.gz'),
+                    usecols=['user_id', 'sent_request_count', 'received_request_count'], low_memory=False)
+df_fr_c = df_fr[df_fr['user_id'].isin(cohort)].set_index('user_id')
+df_c['friend_req_sent'] = df_c['user_id'].map(df_fr_c['sent_request_count']).fillna(0)
+df_c['friend_req_received'] = df_c['user_id'].map(df_fr_c['received_request_count']).fillna(0)
+
+# 5대 핵심 피처
+df_c['social_receive_ratio'] = df_c['recv'] / (df_c['given'] + 1)
+df_c['active_engagement_rate'] = (df_c['ping_read'] + df_c['ping_reply']) / (df_c['recv'] + 1) * 100
+df_c['friend_req_ratio'] = df_c['friend_req_received'] / (df_c['friend_req_sent'] + df_c['friend_req_received'] + 1)
+df_c['hint_open_ratio'] = df_c['opened_times'] / (df_c['recv'] + 1) * 100
+df_c['payment_count'] = df_c['pay_count']
+
+# 구간화
+srr_bins = [-np.inf, 0.2, 0.5, 1.0, 2.0, 5.0, np.inf]
+srr_labels = ['0~0.2(결손)', '0.2~0.5(기여형)', '0.5~1.0(균형)', '1.0~2.0(수혜)', '2.0~5.0(인기)', '5.0+(독점/인싸)']
+df_c['srr_tier'] = pd.cut(df_c['social_receive_ratio'], bins=srr_bins, labels=srr_labels, right=True)
+
+aer_bins = [-np.inf, 0.001, 30.0, 60.0, 90.0, 120.0, np.inf]
+aer_labels = ['0%(미반응)', '1~30%', '31~60%', '61~90%', '91~120%', '121%+(열성소통)']
+df_c['aer_tier'] = pd.cut(df_c['active_engagement_rate'], bins=aer_bins, labels=aer_labels, right=True)
+
+frr_bins = [-np.inf, 0.2, 0.4, 0.6, 0.8, np.inf]
+frr_labels = ['0~0.2(탐색형)', '0.2~0.4(외향형)', '0.4~0.6(균형형)', '0.6~0.8(인기형)', '0.8~1.0(수혜인싸)']
+df_c['frr_tier'] = pd.cut(df_c['friend_req_ratio'], bins=frr_bins, labels=frr_labels, right=True)
+
+hor_bins = [-np.inf, 0.001, 3.0, 7.0, 15.0, 30.0, np.inf]
+hor_labels = ['0%(미열람)', '1~3%', '4~7%', '8~15%', '16~30%', '31%+(헤비열람)']
+df_c['hor_tier'] = pd.cut(df_c['hint_open_ratio'], bins=hor_bins, labels=hor_labels, right=True)
+
+pay_bins_5 = [-1, 0, 1, 2, 4, np.inf]
+pay_labels_5 = ['0회(무과금)', '1회(첫결제)', '2회(재결제)', '3~4회', '5회+(고래)']
+df_c['pay_tier_5'] = pd.cut(df_c['payment_count'], bins=pay_bins_5, labels=pay_labels_5)
+
+# 시각화 대시보드
+fig = plt.figure(figsize=(16, 11))
+fig.suptitle('5개 핵심 비율·행동 피처 구간별 유저 분포 현황 (총 5,090명)', fontsize=14, weight='bold', y=0.98)
+
+ax1 = plt.subplot2grid((2, 6), (0, 0), colspan=2)
+ax2 = plt.subplot2grid((2, 6), (0, 2), colspan=2)
+ax3 = plt.subplot2grid((2, 6), (0, 4), colspan=2)
+ax4 = plt.subplot2grid((2, 6), (1, 0), colspan=3)
+ax5 = plt.subplot2grid((2, 6), (1, 3), colspan=3)
+
+# 1. 소셜 수혜율
+c1 = df_c['srr_tier'].value_counts().reindex(srr_labels, fill_value=0)
+bars1 = ax1.bar(srr_labels, c1, color=['#1a4b75', '#246da3', '#4990c2', '#86b7db', '#b9d6ea', '#dceaf3'], width=0.7)
+ax1.set_title('1. 소셜 수혜율 (social_receive_ratio)\n[지목 수신량 / (발송량 + 1)]', fontsize=10, weight='bold', pad=8)
+ax1.set_xlabel('수혜율 구간', fontsize=9)
+ax1.set_ylabel('유저 수 (명)', fontsize=9)
+ax1.set_ylim(0, max(c1) * 1.15)
+ax1.tick_params(axis='x', rotation=30)
+ax1.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars1:
+    h = b.get_height()
+    ax1.annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                 ha='center', va='bottom', fontsize=7, xytext=(0, 2), textcoords='offset points')
+
+# 2. 소통 반응률
+c2 = df_c['aer_tier'].value_counts().reindex(aer_labels, fill_value=0)
+bars2 = ax2.bar(aer_labels, c2, color=['#1b6837', '#2e8540', '#4ba55d', '#74c485', '#a3dfb0', '#d2f3db'], width=0.7)
+ax2.set_title('2. 소통 반응률 (active_engagement_rate)\n[(핑 열람 + 핑 답장) / (수신량 + 1)]', fontsize=10, weight='bold', pad=8)
+ax2.set_xlabel('반응률 구간', fontsize=9)
+ax2.set_ylim(0, max(c2) * 1.15)
+ax2.tick_params(axis='x', rotation=30)
+ax2.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars2:
+    h = b.get_height()
+    ax2.annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                 ha='center', va='bottom', fontsize=7, xytext=(0, 2), textcoords='offset points')
+
+# 3. 친구 요청 인기도 비율
+c3 = df_c['frr_tier'].value_counts().reindex(frr_labels, fill_value=0)
+bars3 = ax3.bar(frr_labels, c3, color=['#4a2b66', '#6b4c8a', '#9173b0', '#bca3d4', '#e2d7ed'], width=0.7)
+ax3.set_title('3. 친구 요청 인기도 비율 (friend_req_ratio)\n[요청 수신 / (발송 + 수신 + 1)]', fontsize=10, weight='bold', pad=8)
+ax3.set_xlabel('인기도 비율 구간', fontsize=9)
+ax3.set_ylim(0, max(c3) * 1.15)
+ax3.tick_params(axis='x', rotation=30)
+ax3.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars3:
+    h = b.get_height()
+    ax3.annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                 ha='center', va='bottom', fontsize=7, xytext=(0, 2), textcoords='offset points')
+
+# 4. 초성 힌트 오픈율
+c4 = df_c['hor_tier'].value_counts().reindex(hor_labels, fill_value=0)
+bars4 = ax4.bar(hor_labels, c4, color=['#8c2d04', '#c94d12', '#e67329', '#f39e58', '#f8c495', '#fde2cb'], width=0.7)
+ax4.set_title('4. 초성 힌트 오픈율 (hint_open_ratio)\n[정체 열람 수 / (수신량 + 1)]', fontsize=10, weight='bold', pad=8)
+ax4.set_xlabel('오픈율 구간', fontsize=9)
+ax4.set_ylabel('유저 수 (명)', fontsize=9)
+ax4.set_ylim(0, max(c4) * 1.15)
+ax4.tick_params(axis='x', rotation=30)
+ax4.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars4:
+    h = b.get_height()
+    ax4.annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                 ha='center', va='bottom', fontsize=7, xytext=(0, 2), textcoords='offset points')
+
+# 5. 유료 결제 횟수
+c5 = df_c['pay_tier_5'].value_counts().reindex(pay_labels_5, fill_value=0)
+bars5 = ax5.bar(pay_labels_5, c5, color=['#801414', '#b33939', '#d7634d', '#f19066', '#fcd2b4'], width=0.7)
+ax5.set_title('5. 유료 결제 횟수 (payment_count)\n[실제 현금 결제 완료 횟수]', fontsize=10, weight='bold', pad=8)
+ax5.set_xlabel('결제 횟수 구간', fontsize=9)
+ax5.set_ylim(0, max(c5) * 1.15)
+ax5.tick_params(axis='x', rotation=30)
+ax5.grid(axis='y', linestyle='-', alpha=0.3, color='#cccccc')
+for b in bars5:
+    h = b.get_height()
+    ax5.annotate(f'{int(h):,}명\n({h/total_cohort*100:.1f}%)', (b.get_x() + b.get_width()/2., h),
+                 ha='center', va='bottom', fontsize=7, xytext=(0, 2), textcoords='offset points')
+
+plt.tight_layout()
+plot8_path = os.path.join(OUT_DIR, '8_5대핵심비율_행동피처_분포.png')
+plt.savefig(plot8_path, dpi=300)
+plt.close()
+print(f"-> 그래프 저장 완료: {plot8_path}")
+
+print("\n" + "="*70)
+print("전체 행동 및 핵심 피처 분포 분석 및 시각화 저장이 성공적으로 완료되었습니다.")
+print(f"그래프 저장 폴더: {OUT_DIR}")
+print("="*70)
