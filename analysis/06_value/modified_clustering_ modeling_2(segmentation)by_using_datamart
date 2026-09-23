@@ -1,0 +1,224 @@
+"""
+# 3단계-5. 데이터마트 기반 GMM (Gaussian Mixture Model) 유저 세그멘테이션 모델링
+- 분석 목적: 10개 핵심 학교 투표 코어 유저(4,849명)를 대상으로 가우시안 혼합 모델(GMM)을 적용하여 다차원 행동 군집을 도출함.
+- 주요 분석 내용:
+  1. 5대 핵심 피처 QuantileTransformer(가우시안 정규분포) 변환.
+  2. GMM 군집 수(K=2~6) 6대 적합도 평가 (AIC, BIC, 실루엣, 퍼지 실루엣, NES, MMPP).
+  3. K=4 GMM 모델 학습, 소속 확률(Posterior Probability) 산출, 군집 프로파일링.
+  4. 시각화 대시보드(군집 평가 곡선, 파이차트 & Z-score 히트맵) 및 최종 세그멘테이션 마트 저장.
+- 작성 원칙: 인위적 미사여구 및 이모티콘을 배제하고 개조식(~함)으로 간결하게 기술함.
+"""
+
+import os
+import warnings
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score, silhouette_samples
+
+warnings.filterwarnings('ignore')
+
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+
+# 경로 설정
+OUT_DIR = r"c:\Users\user\Desktop\고급프로젝트\데이터마트_기반_클러스터링_EDA"
+if not os.path.exists(OUT_DIR):
+    OUT_DIR = r"c:\Users\user\Desktop\검증\데이터마트_기반_클러스터링_EDA"
+os.makedirs(OUT_DIR, exist_ok=True)
+
+MART_PATH = os.path.join(OUT_DIR, 'mart_clustering_features_top10_datamart.csv')
+if not os.path.exists(MART_PATH):
+    MART_PATH = r"c:\Users\user\Desktop\고급프로젝트\데이터 마트\mart_clustering_features_top10.csv"
+
+print("=== 5단계. 데이터마트 기반 GMM 클러스터링 모델링 시작 ===")
+
+# ----------------------------------------------------
+# 1. 코어 코호트 추출 및 5대 핵심 피처 Quantile Transformation
+# ----------------------------------------------------
+df_raw = pd.read_csv(MART_PATH)
+df_core = df_raw[df_raw['votes_given'] > 0].copy().reset_index(drop=True)
+print(f"- 클러스터링 학습 대상 코어 유저 수: {len(df_core):,}명 (비활동 {len(df_raw)-len(df_core):,}명 분리)")
+
+features = ['active_engagement_rate', 'social_receive_ratio', 'hint_open_ratio', 'payment_count', 'friend_req_ratio']
+X_raw = df_core[features].copy()
+
+scaler = QuantileTransformer(output_distribution='normal', random_state=42)
+X_scaled = scaler.fit_transform(X_raw)
+print("- 5대 핵심 피처 QuantileTransformation 정규분포 변환 완료.")
+
+# ----------------------------------------------------
+# 2. 최적 군집 수(K=2~6) 6대 종합 적합도 평가 (AIC, BIC, 실루엣, 퍼지 실루엣, NES, MMPP)
+# ----------------------------------------------------
+eval_list = []
+print("\n[GMM 군집 수(K=2~6) 6대 적합도 종합 평가]")
+
+for k in range(2, 7):
+    gmm = GaussianMixture(n_components=k, covariance_type='full', random_state=42, n_init=15)
+    preds = gmm.fit_predict(X_scaled)
+    probs = gmm.predict_proba(X_scaled)
+    
+    # 1) AIC & BIC
+    aic = gmm.aic(X_scaled)
+    bic = gmm.bic(X_scaled)
+    
+    # 2) Hard Silhouette Score
+    sil = silhouette_score(X_scaled, preds)
+    
+    # 3) MMPP (Mean Maximum Posterior Probability)
+    max_probs = np.max(probs, axis=1)
+    mmpp = np.mean(max_probs)
+    
+    # 4) NES (Normalized Entropy Score / 정규화 분류 엔트로피)
+    eps = 1e-12
+    probs_safe = np.clip(probs, eps, 1.0)
+    entropy_per_sample = -np.sum(probs_safe * np.log(probs_safe), axis=1)
+    pe = np.mean(entropy_per_sample)
+    nes = pe / np.log(k)  # [0, 1] 범위 정규화 (0에 가까울수록 선명한 분리)
+    
+    # 5) Fuzzy Silhouette Score (소속 마진 p1 - p2 가중 소프트 실루엣)
+    sorted_probs = np.sort(probs, axis=1)
+    diff_top2 = sorted_probs[:, -1] - sorted_probs[:, -2]
+    sil_samples = silhouette_samples(X_scaled, preds)
+    fuzzy_sil = np.sum(diff_top2 * sil_samples) / np.sum(diff_top2)
+    
+    eval_list.append({
+        'K': k,
+        'AIC': aic,
+        'BIC': bic,
+        'Silhouette': sil,
+        'Fuzzy_Silhouette': fuzzy_sil,
+        'NES': nes,
+        'MMPP': mmpp
+    })
+
+eval_df = pd.DataFrame(eval_list)
+
+print("\n" + "="*85)
+print("             GMM 군집 모델 적합도 및 클러스터링 품질 종합 평가 결과표")
+print("="*85)
+print(eval_df.to_string(index=False, formatters={
+    'AIC': '{:>12,.1f}'.format,
+    'BIC': '{:>12,.1f}'.format,
+    'Silhouette': '{:>10.4f}'.format,
+    'Fuzzy_Silhouette': '{:>16.4f}'.format,
+    'NES': '{:>8.4f}'.format,
+    'MMPP': '{:>8.4f}'.format
+}))
+print("="*85)
+
+# 군집 평가 지표 2x2 종합 시각화 곡선
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+# 1. AIC & BIC
+axes[0, 0].plot(eval_df['K'], eval_df['BIC'], marker='o', color='#d62728', linewidth=2, label='BIC')
+axes[0, 0].plot(eval_df['K'], eval_df['AIC'], marker='s', color='#ff7f0e', linewidth=2, linestyle='--', label='AIC')
+axes[0, 0].set_title("1. 정보 기준 평가 곡선 (BIC & AIC, 낮을수록 우수)", fontsize=11, weight='bold')
+axes[0, 0].set_xlabel("군집 수 (K)")
+axes[0, 0].set_ylabel("Score")
+axes[0, 0].legend()
+axes[0, 0].grid(True, linestyle=':', alpha=0.6)
+
+# 2. Hard Silhouette vs Fuzzy Silhouette
+axes[0, 1].plot(eval_df['K'], eval_df['Silhouette'], marker='o', color='#1f77b4', linewidth=2, label='Hard Silhouette')
+axes[0, 1].plot(eval_df['K'], eval_df['Fuzzy_Silhouette'], marker='^', color='#2ca02c', linewidth=2, linestyle='--', label='Fuzzy Silhouette')
+axes[0, 1].set_title("2. 응집도·분리도 평가 (실루엣 & 퍼지 실루엣, 높을수록 우수)", fontsize=11, weight='bold')
+axes[0, 1].set_xlabel("군집 수 (K)")
+axes[0, 1].set_ylabel("Silhouette Score")
+axes[0, 1].legend()
+axes[0, 1].grid(True, linestyle=':', alpha=0.6)
+
+# 3. NES (Normalized Entropy Score)
+axes[1, 0].plot(eval_df['K'], eval_df['NES'], marker='o', color='#9467bd', linewidth=2)
+axes[1, 0].set_title("3. 정규화 분류 엔트로피 (NES, 0에 가까울수록 경계 선명)", fontsize=11, weight='bold')
+axes[1, 0].set_xlabel("군집 수 (K)")
+axes[1, 0].set_ylabel("NES (0~1)")
+axes[1, 0].grid(True, linestyle=':', alpha=0.6)
+
+# 4. MMPP (Mean Maximum Posterior Probability)
+axes[1, 1].plot(eval_df['K'], eval_df['MMPP'] * 100, marker='s', color='#8c564b', linewidth=2)
+axes[1, 1].set_title("4. 평균 최대 사후 소속확률 (MMPP, 100%에 가까울수록 확신도 우수)", fontsize=11, weight='bold')
+axes[1, 1].set_xlabel("군집 수 (K)")
+axes[1, 1].set_ylabel("MMPP (%)")
+axes[1, 1].grid(True, linestyle=':', alpha=0.6)
+
+plt.tight_layout()
+eval_img_path = os.path.join(OUT_DIR, '5단계_GMM_군집수_6대지표_평가곡선.png')
+plt.savefig(eval_img_path, dpi=300)
+plt.close()
+print(f"- 6대 군집 평가 지표 종합 곡선 저장 완료: {eval_img_path}")
+
+# ----------------------------------------------------
+# 3. K=4 GMM 모델 학습 및 군집 프로파일링
+# ----------------------------------------------------
+gmm_final = GaussianMixture(n_components=4, covariance_type='full', random_state=42, n_init=15)
+df_core['cluster'] = gmm_final.fit_predict(X_scaled)
+
+probs = gmm_final.predict_proba(X_scaled)
+for k in range(4):
+    df_core[f'cluster_prob_{k}'] = probs[:, k]
+
+cluster_counts = df_core['cluster'].value_counts().sort_index()
+
+summary_5 = df_core.groupby('cluster')[features].mean()
+summary_5.insert(0, '인원수(명)', cluster_counts)
+summary_5.insert(1, '비율(%)', (cluster_counts / len(df_core) * 100).round(2))
+
+act_cols = ['votes_given', 'votes_received', 'ping_read', 'opened_times', 'point_spent', 'payment_count', 'contacts_count']
+summary_act = df_core.groupby('cluster')[act_cols].mean()
+summary_act.insert(0, '인원수(명)', cluster_counts)
+summary_act.insert(1, '비율(%)', (cluster_counts / len(df_core) * 100).round(2))
+
+print("\n=== [K=4 군집별 5대 핵심 피처 평균] ===")
+print(summary_5.round(4).to_string())
+
+print("\n=== [K=4 군집별 원본 행동 지표 평균] ===")
+print(summary_act.round(2).to_string())
+
+# ----------------------------------------------------
+# 4. 최종 결과 시각화 및 데이터셋 저장
+# ----------------------------------------------------
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+colors = ['#3498db', '#2ecc71', '#e74c3c', '#95a5a6']
+labels = [
+    f"Cluster 0 (소통코어)\n({cluster_counts[0]:,}명, {cluster_counts[0]/len(df_core)*100:.1f}%)",
+    f"Cluster 1 (일반수혜)\n({cluster_counts[1]:,}명, {cluster_counts[1]/len(df_core)*100:.1f}%)",
+    f"Cluster 2 (과금VIP)\n({cluster_counts[2]:,}명, {cluster_counts[2]/len(df_core)*100:.1f}%)",
+    f"Cluster 3 (침묵수혜)\n({cluster_counts[3]:,}명, {cluster_counts[3]/len(df_core)*100:.1f}%)"
+]
+axes[0].pie(cluster_counts, labels=labels, autopct='%1.1f%%', colors=colors, startangle=140, 
+            textprops={'fontsize': 10, 'weight': 'bold'})
+axes[0].set_title("[10개교 코어 4,849명] K=4 GMM 군집별 유저 비중", fontsize=12, weight='bold')
+
+z_df = (df_core.groupby('cluster')[features].mean() - df_core[features].mean()) / df_core[features].std()
+z_df.index = [f"Cluster {i}" for i in z_df.index]
+
+sns.heatmap(z_df, annot=True, fmt=".2f", cmap="coolwarm", center=0, ax=axes[1], cbar_kws={'label': 'Z-Score'})
+axes[1].set_title("군집별 5대 핵심 피처 표준화(Z-score) 프로파일", fontsize=12, weight='bold')
+axes[1].set_ylabel("군집 (Cluster)")
+axes[1].tick_params(axis='x', rotation=25)
+
+plt.tight_layout()
+profile_img_path = os.path.join(OUT_DIR, '5단계_GMM_K4_군집_프로파일_시각화.png')
+plt.savefig(profile_img_path, dpi=300)
+plt.close()
+print(f"- 군집 프로파일 시각화 저장 완료: {profile_img_path}")
+
+# 전체 5,090명 대상 군집 매핑 (비활동 -1 할당)
+df_final = df_raw.merge(
+    df_core[['user_id', 'cluster'] + [f'cluster_prob_{k}' for k in range(4)]],
+    on='user_id',
+    how='left'
+)
+df_final['cluster'] = df_final['cluster'].fillna(-1).astype(int)
+
+final_save_path = os.path.join(OUT_DIR, 'mart_clustering_gmm_results_top10_datamart.csv')
+df_final.to_csv(final_save_path, index=False, encoding='utf-8-sig')
+print(f"- 최종 클러스터링 결과 데이터셋 저장 완료: {final_save_path}")
+
+print("\n=== 5단계 GMM 유저 세그멘테이션 모델링 완료 ===")
