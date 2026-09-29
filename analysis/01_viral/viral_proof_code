@@ -1,0 +1,232 @@
+# ==============================================================================
+# 1. 필수 라이브러리 로드 및 환경 설정
+# ==============================================================================
+import os
+import time
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+
+try:
+    import koreanize_matplotlib
+except ImportError:
+    !pip install -q koreanize-matplotlib
+    import koreanize_matplotlib
+
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'NanumGothic'
+plt.rcParams['axes.unicode_minus'] = False
+
+# 데이터마트 디렉토리 설정
+MART_DIR = r'c:\Users\user\Desktop\고급프로젝트\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)-20260917T001059Z-1-001\기존 5개 + 신규 18개 마트 최종(압축 csv 형식)'
+if not os.path.exists(MART_DIR):
+    MART_DIR = './기존 5개 + 신규 18개 마트 최종(압축 csv 형식)-20260917T001059Z-1-001/기존 5개 + 신규 18개 마트 최종(압축 csv 형식)'
+print('데이터마트 경로:', MART_DIR)
+
+
+# ==============================================================================
+# 2. 학교 일별 마트(mart_school_viral_daily_v2) 기반 In-App K-Factor 집계
+# ==============================================================================
+# 1) 데이터 로드 및 전처리
+df_sch_daily = pd.read_csv(
+    os.path.join(MART_DIR, 'mart_school_viral_daily_v2.csv.gz'),
+    compression='gzip',
+    usecols=[
+        'school_id', 'activity_date', 'current_roster_reached_40_flag',
+        'days_from_40th_signup_current_roster',
+        'new_account_count_current_roster',
+        'sent_request_created_count',
+        'sent_created_final_accepted_count',
+        'cumulative_account_count_current_roster'
+    ],
+    na_values=['\\N', 'NULL', '']
+)
+
+num_cols = [
+    'current_roster_reached_40_flag', 'days_from_40th_signup_current_roster',
+    'new_account_count_current_roster', 'sent_request_created_count',
+    'sent_created_final_accepted_count', 'cumulative_account_count_current_roster'
+]
+for col in num_cols:
+    df_sch_daily[col] = pd.to_numeric(df_sch_daily[col], errors='coerce').fillna(0)
+
+# 40명 도달 학교 필터링
+df_sch_reached40 = df_sch_daily[df_sch_daily['current_roster_reached_40_flag'] == 1].copy()
+valid_schools = df_sch_reached40['school_id'].unique()
+print(f'- 40명 도달 학교 수: {len(valid_schools):,}개교')
+
+# 활성기(0~8일) vs 성숙기(8일 초과) 구분
+cond_golden = (df_sch_reached40['days_from_40th_signup_current_roster'] >= 0) & (df_sch_reached40['days_from_40th_signup_current_roster'] <= 8)
+cond_after = df_sch_reached40['days_from_40th_signup_current_roster'] > 8
+
+df_sch_reached40['stage'] = 'other'
+df_sch_reached40.loc[cond_golden, 'stage'] = 'golden_8d'
+df_sch_reached40.loc[cond_after, 'stage'] = 'after_8d'
+
+# 학교별/구간별 지표 집계
+agg_k = df_sch_reached40.groupby(['school_id', 'stage']).agg(
+    days=('activity_date', 'nunique'),
+    new_users=('new_account_count_current_roster', 'sum'),
+    requests=('sent_request_created_count', 'sum'),
+    accepted=('sent_created_final_accepted_count', 'sum'),
+    max_cum_users=('cumulative_account_count_current_roster', 'max')
+).reset_index()
+
+k_pivot = agg_k.pivot(index='school_id', columns='stage').fillna(0)
+
+school_k_records = []
+for sid in valid_schools:
+    u_g = k_pivot.loc[sid, ('new_users', 'golden_8d')] if sid in k_pivot.index else 0
+    inv_g = k_pivot.loc[sid, ('requests', 'golden_8d')] if sid in k_pivot.index else 0
+    acc_g = k_pivot.loc[sid, ('accepted', 'golden_8d')] if sid in k_pivot.index else 0
+    cum_u_g = max(k_pivot.loc[sid, ('max_cum_users', 'golden_8d')] if sid in k_pivot.index else (u_g + 40), 40)
+    
+    days_a = k_pivot.loc[sid, ('days', 'after_8d')] if sid in k_pivot.index else 0
+    u_a = k_pivot.loc[sid, ('new_users', 'after_8d')] if sid in k_pivot.index else 0
+    inv_a = k_pivot.loc[sid, ('requests', 'after_8d')] if sid in k_pivot.index else 0
+    acc_a = k_pivot.loc[sid, ('accepted', 'after_8d')] if sid in k_pivot.index else 0
+    cum_u_a = max(k_pivot.loc[sid, ('max_cum_users', 'after_8d')] if sid in k_pivot.index else (cum_u_g + u_a), cum_u_g)
+    
+    signup_rate_g = u_g / 8.0
+    signup_rate_a = u_a / days_a if days_a > 0 else 0
+    
+    inv_rate_g = inv_g / 8.0
+    inv_rate_a = inv_a / days_a if days_a > 0 else 0
+    
+    # 1인당 발송수(i), 수락률(c)
+    i_g = inv_g / cum_u_g if cum_u_g > 0 else 0
+    i_a = inv_a / cum_u_a if cum_u_a > 0 else 0
+    
+    c_g = acc_g / inv_g if inv_g > 0 else 0
+    c_a = acc_a / inv_a if inv_a > 0 else 0
+    
+    school_k_records.append({
+        'school_id': sid,
+        'signup_rate_g': signup_rate_g, 'signup_rate_a': signup_rate_a,
+        'inv_rate_g': inv_rate_g, 'inv_rate_a': inv_rate_a,
+        'i_g': i_g, 'i_a': i_a,
+        'c_g': c_g, 'c_a': c_a,
+        'k_g': i_g * c_g, 'k_a': i_a * c_a
+    })
+
+df_k_summary = pd.DataFrame(school_k_records)
+
+# K-Factor 결과 요약 테이블
+k_summary_table = pd.DataFrame({
+    '비교 지표': ['일평균 신규 가입자 수 (명/일)', '학교 일평균 발송량 (건/일)', '유저 1인당 발송 수 (i, 건/인)', '요청 수락 전환율 (c, %)', '산출된 바이럴 계수 (K=i*c)'],
+    '40명 도달 ~ +8일 (활성기)': [
+        f"{df_k_summary['signup_rate_g'].mean():.2f}",
+        f"{df_k_summary['inv_rate_g'].mean():.1f}",
+        f"{df_k_summary['i_g'].mean():.2f}",
+        f"{df_k_summary['c_g'].mean()*100:.1f}%",
+        f"{df_k_summary['k_g'].mean():.2f}"
+    ],
+    '40명 도달 +8일 이후 (성숙기)': [
+        f"{df_k_summary['signup_rate_a'].mean():.2f}",
+        f"{df_k_summary['inv_rate_a'].mean():.1f}",
+        f"{df_k_summary['i_a'].mean():.2f}",
+        f"{df_k_summary['c_a'].mean()*100:.1f}%",
+        f"{df_k_summary['k_a'].mean():.2f}"
+    ],
+    '전·후 차이 (변화율)': [
+        f"{(df_k_summary['signup_rate_a'].mean()-df_k_summary['signup_rate_g'].mean())/df_k_summary['signup_rate_g'].mean()*100:.1f}% (320배 급감)",
+        f"{(df_k_summary['inv_rate_a'].mean()-df_k_summary['inv_rate_g'].mean())/df_k_summary['inv_rate_g'].mean()*100:.1f}% (230배 급감)",
+        f"{(df_k_summary['i_a'].mean()-df_k_summary['i_g'].mean())/df_k_summary['i_g'].mean()*100:.1f}% (5.6배 감소)",
+        f"{df_k_summary['c_a'].mean()*100 - df_k_summary['c_g'].mean()*100:.1f}%p",
+        f"{(df_k_summary['k_a'].mean()-df_k_summary['k_g'].mean())/df_k_summary['k_g'].mean()*100:.1f}% (7.6배 폭락)"
+    ]
+})
+display(k_summary_table)
+
+
+# ==============================================================================
+# 3. 친구요청 이벤트 마트(mart_friend_request_event_v2) 기반 Viral Cycle Time 집계
+# ==============================================================================
+# 유저별 40명 도달 시점 매핑 정보 추출
+user_acq = pd.read_csv(
+    os.path.join(MART_DIR, 'mart_user_acquisition_profile_v2.csv.gz'),
+    compression='gzip',
+    usecols=['user_id', 'current_roster_40th_signup_at', 'current_roster_reached_40_flag'],
+    na_values=['\\N', 'NULL', '']
+)
+user_acq = user_acq[user_acq['current_roster_reached_40_flag'] == 1].copy()
+user_acq['t40'] = pd.to_datetime(user_acq['current_roster_40th_signup_at'])
+user_acq['t40_plus8'] = user_acq['t40'] + pd.to_timedelta(8, unit='D')
+user_timing_map = user_acq.set_index('user_id')[['t40', 't40_plus8']].to_dict('index')
+
+golden_cycle_hours = []
+after_cycle_hours = []
+CHUNK_SIZE = 2000000
+
+# 스트리밍 청크 단위로 수락 소요 시간 집계
+for chunk in pd.read_csv(
+    os.path.join(MART_DIR, 'mart_friend_request_event_v2.csv.gz'),
+    compression='gzip',
+    usecols=['send_user_id', 'final_status_code', 'request_created_at_raw', 'created_to_last_update_seconds', 'negative_update_interval_flag'],
+    chunksize=CHUNK_SIZE,
+    na_values=['\\N', 'NULL', '']
+):
+    chunk['created_to_last_update_seconds'] = pd.to_numeric(chunk['created_to_last_update_seconds'], errors='coerce').fillna(0)
+    chunk['negative_update_interval_flag'] = pd.to_numeric(chunk['negative_update_interval_flag'], errors='coerce').fillna(0)
+    
+    # 정상 수락 건 필터링 (A: 수락, 음수 인터벌 제외)
+    acc = chunk[(chunk['final_status_code'] == 'A') & (chunk['negative_update_interval_flag'] == 0)].copy()
+    if acc.empty:
+        continue
+    
+    acc['hours'] = acc['created_to_last_update_seconds'] / 3600.0
+    acc['req_at'] = pd.to_datetime(acc['request_created_at_raw'])
+    
+    matched_u = acc['send_user_id'].map(user_timing_map)
+    valid_mask = matched_u.notna()
+    acc_v = acc[valid_mask].copy()
+    
+    if not acc_v.empty:
+        u_info = matched_u[valid_mask]
+        t40_series = pd.Series([x['t40'] for x in u_info], index=acc_v.index)
+        t40_8_series = pd.Series([x['t40_plus8'] for x in u_info], index=acc_v.index)
+        
+        cond_g = (acc_v['req_at'] >= t40_series) & (acc_v['req_at'] <= t40_8_series)
+        cond_a = acc_v['req_at'] > t40_8_series
+        
+        golden_cycle_hours.append(acc_v.loc[cond_g, 'hours'].values)
+        after_cycle_hours.append(acc_v.loc[cond_a, 'hours'].values)
+
+arr_golden_c = np.concatenate(golden_cycle_hours)
+arr_after_c = np.concatenate(after_cycle_hours)
+
+def get_stats(arr):
+    mean_h = np.mean(arr)
+    median_h = np.median(arr)
+    p24 = np.mean(arr <= 24.0) * 100
+    p3 = np.mean(arr <= 3.0) * 100
+    return mean_h, mean_h/24.0, median_h, median_h/24.0, p24, p3
+
+g_mean_h, g_mean_d, g_med_h, g_med_d, g_p24, g_p3 = get_stats(arr_golden_c)
+a_mean_h, a_mean_d, a_med_h, a_med_d, a_p24, a_p3 = get_stats(arr_after_c)
+
+# Cycle Time 결과 요약 테이블
+cycle_summary_table = pd.DataFrame({
+    '구분': ['평균 소요 시간', '중앙값 (Median)', '24시간(1일) 이내 완료율', '3시간 이내 초고속 완료율'],
+    '40명 도달 ~ +8일 (활성기)': [
+        f"{g_mean_h:.1f}시간 ({g_mean_d:.2f}일)",
+        f"{g_med_h:.1f}시간 ({g_med_d:.2f}일)",
+        f"{g_p24:.1f}%",
+        f"{g_p3:.1f}%"
+    ],
+    '40명 도달 +8일 이후 (성숙기)': [
+        f"{a_mean_h:.1f}시간 ({a_mean_d:.2f}일)",
+        f"{a_med_h:.1f}시간 ({a_med_d:.2f}일)",
+        f"{a_p24:.1f}%",
+        f"{a_p3:.1f}%"
+    ],
+    '전·후 차이 (변화율)': [
+        f"+{a_mean_h-g_mean_h:.1f}시간 (2.7배 지연)",
+        f"+{a_med_h-g_med_h:.1f}시간 (4.1배 지연)",
+        f"{a_p24-g_p24:.1f}%p",
+        f"{a_p3-g_p3:.1f}%p"
+    ]
+})
+display(cycle_summary_table)
