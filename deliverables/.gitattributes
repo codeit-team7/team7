@@ -1,0 +1,4 @@
+# Preserve submitted files byte-for-byte, including their original line endings.
+*.ipynb -text
+*.html -text
+*.pdf binary
